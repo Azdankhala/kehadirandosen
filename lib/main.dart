@@ -6,6 +6,8 @@ import 'dart:async';
 import 'package:intl/date_symbol_data_local.dart';
 
 
+
+
 void main() {
   runApp(const MyApp());
 }
@@ -40,12 +42,19 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
+  @override
+  _HomePageState createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  String searchQuery = '';
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Attendance'),
+        title: const Text('Universitas Nasional'),
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -61,20 +70,40 @@ class HomePage extends StatelessWidget {
           const SizedBox(height: 10),
           const Center(
             child: Text(
-              'List Kehadiran Pimpinan',
+              'Daftar Kehadiran Pimpinan',
               style: TextStyle(
                 fontSize: 23,
                 fontWeight: FontWeight.bold,
               ),
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: TextField(
+              decoration: InputDecoration(
+                labelText: 'Cari Nama',
+                prefixIcon: Icon(Icons.search),
+              ),
+              onChanged: (value) {
+                setState(() {
+                  searchQuery = value;
+                });
+              },
+            ),
+          ),
           Expanded(
             child: Consumer<DosenProvider>(
               builder: (context, provider, _) {
+                final filteredList = provider.listDosen.where((dosen) {
+                  final name = dosen.nama.toLowerCase();
+                  final query = searchQuery.toLowerCase();
+                  return name.contains(query);
+                }).toList();
+
                 return ListView.builder(
-                  itemCount: provider.listDosen.length,
+                  itemCount: filteredList.length,
                   itemBuilder: (context, index) {
-                    final dosen = provider.listDosen[index];
+                    final dosen = filteredList[index];
                     return Container(
                       decoration: BoxDecoration(
                         color: dosen.status ? Colors.green.withOpacity(0.2) : Colors.grey.withOpacity(0.2),
@@ -105,23 +134,16 @@ class HomePage extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              ElevatedButton(
-                child: const Text('Sign In'),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => MahasiswaPage()),
-                  );
-                },
-              ),
-              ElevatedButton(
-                child: const Text('Dosen'),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => DosenLoginPage()),
-                  );
-                },
+              Expanded(
+                child: ElevatedButton(
+                  child: const Text('Sign In'),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => MahasiswaPage()),
+                    );
+                  },
+                ),
               ),
             ],
           ),
@@ -130,6 +152,7 @@ class HomePage extends StatelessWidget {
     );
   }
 }
+
 
 
 class DosenModel {
@@ -170,9 +193,9 @@ class _MahasiswaLoginPageState extends State<MahasiswaLoginPage> {
     final connection = PostgreSQLConnection(
       'your_database_host',
       5432,
-      'your_database_name',
-      username: 'your_username',
-      password: 'your_password',
+      'mahasiswa',
+      username: 'postgres',
+      password: '',
     );
 
     await connection.open();
@@ -216,7 +239,7 @@ class _MahasiswaLoginPageState extends State<MahasiswaLoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mahasiswa Login'),
+        title: const Text('Login'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -306,7 +329,7 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Kehadiran Pimpinan'),
+        title: const Text('Kehadiran'),
       ),
       body: Column(
         children: [
@@ -324,7 +347,7 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
                 Text(
                   formattedDate,
                   style: TextStyle(
-                    fontSize: 20,
+                    fontSize: 30,
                   ),
                 ),
               ],
@@ -334,38 +357,47 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
             child: ListView.builder(
               itemCount: dosenProvider.listDosen.length,
               itemBuilder: (context, index) {
-                return ListTile(
-                  title: Text(
-                    dosenProvider.listDosen[index].nama,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
+                final dosen = dosenProvider.listDosen[index];
+                return Container(
+                  decoration: BoxDecoration(
+                    color: dosen.status ? Colors.green.withOpacity(0.2) : Colors.grey.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
+                  padding: const EdgeInsets.all(8),
+                  child: ListTile(
+                    title: Text(
+                      dosen.nama,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    subtitle: Text(
+                      dosen.status
+                          ? '${DateFormat('dd MMMM yyyy').format(DateTime.now())}, Jam $formattedTime '
+                          : 'Tidak Hadir',
+                    ),
+                    trailing: Switch(
+                      value: dosen.status,
+                      onChanged: (value) {
+                        setState(() {
+                          dosenProvider.updateStatus(index, value);
+                          if (value && !isDateStatusUpdated) {
+                            formattedTime =
+                                DateFormat('HH:mm').format(DateTime.now());
+                            formattedDate =
+                                DateFormat('dd MMMM yyyy').format(DateTime.now());
+                            isDateStatusUpdated = true;
+                          } else if (!value) {
+                            isDateStatusUpdated = false;
+                          }
+                        });
+                      },
+                      activeTrackColor: Colors.green.withOpacity(0.5),
+                      activeColor: Colors.green,
+                      inactiveThumbColor: Colors.grey,
                     ),
                   ),
-                  subtitle: Text(
-                    dosenProvider.listDosen[index].status
-                        ? '${DateFormat('dd MMMM yyyy').format(DateTime.now())}, Jam $formattedTime '
-                        : 'Tidak Hadir',
-                  ),
-                  trailing: Switch(
-                    value: dosenProvider.listDosen[index].status,
-                    onChanged: (value) {
-                      setState(() {
-                        dosenProvider.updateStatus(index, value);
-                        if (value && !isDateStatusUpdated) {
-                          formattedTime =
-                              DateFormat('HH:mm').format(DateTime.now());
-                          formattedDate =
-                              DateFormat('dd MMMM yyyy').format(DateTime.now());
-                          isDateStatusUpdated = true;
-                        } else if (!value) {
-                          isDateStatusUpdated = false;
-                        }
-                      });
-                    },
-                    activeTrackColor: Colors.green.withOpacity(0.5),
-                    activeColor: Colors.green,
-                    inactiveThumbColor: Colors.grey,
-                  ),
                 );
               },
             ),
@@ -377,175 +409,7 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
 }
 
 
-class DosenLoginPage extends StatefulWidget {
-  @override
-  _DosenLoginPageState createState() => _DosenLoginPageState();
-}
-
-class _DosenLoginPageState extends State<DosenLoginPage> {
-  final TextEditingController _usernameController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-
-  bool _isLoggingIn = false;
-  bool _loginError = false;
-
-  Future<bool> _performLogin() async {
-    final connection = PostgreSQLConnection(
-      'your_database_host',
-      5432,
-      'your_database_name',
-      username: 'your_username',
-      password: 'your_password',
-    );
-
-    await connection.open();
-
-    final result = await connection.query(
-      'SELECT COUNT(*) FROM dosen WHERE username = @username AND password = @password;',
-      substitutionValues: {
-        'username': _usernameController.text,
-        'password': _passwordController.text,
-      },
-    );
-
-    await connection.close();
-
-    final count = result[0][0] as int;
-    return count > 0;
-  }
-
-  void _login() async {
-    setState(() {
-      _isLoggingIn = true;
-      _loginError = false;
-    });
-
-    final success = await _performLogin();
-
-    if (success) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => DosenAbsenPage()),
-      );
-    } else {
-      setState(() {
-        _loginError = true;
-        _isLoggingIn = false;
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Dosen Login'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            TextFormField(
-              enableSuggestions: false,
-              autocorrect: false,
-              controller: _usernameController,
-              decoration: const InputDecoration(
-                  labelText: 'Username',
-                  hintText: 'Enter your username'
-              ),
-            ),
-            TextFormField(
-              enableSuggestions: false,
-              autocorrect: false,
-              controller: _passwordController,
-              decoration: const InputDecoration(
-                  labelText: 'Password',
-                  hintText: 'Enter your password'
-              ),
-              obscureText: true,
-            ),
-            if (_loginError)
-              const Text(
-                'Username or password is incorrect',
-                style: TextStyle(
-                  color: Colors.red,
-                ),
-              ),
-            ElevatedButton(
-              onPressed: _isLoggingIn ? null : _login,
-              child: _isLoggingIn ? const CircularProgressIndicator() : const Text('Login'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class DosenAbsenPage extends StatefulWidget {
-  const DosenAbsenPage({super.key});
-
-  @override
-  _DosenAbsenPageState createState() => _DosenAbsenPageState();
-}
-
-class _DosenAbsenPageState extends State<DosenAbsenPage> {
-  final List<Dosen> listDosen = [
-    Dosen('John Doe', true),
-    Dosen('Jane Smith', false),
-    Dosen('Michael Johnson', true),
-  ];
-
-  String formattedDate = DateFormat('dd MMMM yyyy').format(DateTime.now());
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Kehadiran Pimpinan'),
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              formattedDate,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: listDosen.length,
-              itemBuilder: (context, index) {
-                return ListTile(
-                  title: Text(listDosen[index].nama),
-                  subtitle: Text(listDosen[index].status ? 'Hadir' : 'Tidak Hadir'),
-                  trailing: Switch(
-                    value: listDosen[index].status,
-                    onChanged: (value) {
-                      setState(() {
-                        listDosen[index].status = value;
-                      });
-                    },
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 
-class Dosen {
-  String nama;
-  bool status;
 
-  Dosen(this.nama, this.status);
-}
+
