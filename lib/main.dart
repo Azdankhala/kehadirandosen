@@ -6,8 +6,6 @@ import 'dart:async';
 import 'package:intl/date_symbol_data_local.dart';
 
 
-
-
 void main() {
   runApp(const MyApp());
 }
@@ -140,7 +138,7 @@ class _HomePageState extends State<HomePage> {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => MahasiswaPage()),
+                      MaterialPageRoute(builder: (context) => MahasiswaLoginPage()),
                     );
                   },
                 ),
@@ -152,8 +150,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
-
-
 
 class DosenModel {
   String nama;
@@ -191,17 +187,16 @@ class _MahasiswaLoginPageState extends State<MahasiswaLoginPage> {
 
   Future<bool> _performLogin() async {
     final connection = PostgreSQLConnection(
-      'your_database_host',
-      5432,
-      'mahasiswa',
+      '10.0.2.2',
+      8080,
+      'unas',
       username: 'postgres',
-      password: '',
     );
 
     await connection.open();
 
     final result = await connection.query(
-      'SELECT COUNT(*) FROM mahasiswa WHERE username = @username AND password = @password;',
+      'SELECT COUNT(*) FROM kehadiranpimpinan WHERE username = @username AND password = @password;',
       substitutionValues: {
         'username': _usernameController.text,
         'password': _passwordController.text,
@@ -340,7 +335,7 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
                 Text(
                   formattedTime,
                   style: TextStyle(
-                    fontSize: 30,
+                    fontSize: 40,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
