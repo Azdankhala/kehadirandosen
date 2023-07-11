@@ -320,11 +320,26 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
     super.dispose();
   }
 
+  void _logout() {
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => HomePage()),
+          (Route<dynamic> route) => false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Kehadiran'),
+        automaticallyImplyLeading: false,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.logout),
+            onPressed: _logout,
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -335,7 +350,7 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
                 Text(
                   formattedTime,
                   style: TextStyle(
-                    fontSize: 40,
+                    fontSize: 30,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -355,7 +370,9 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
                 final dosen = dosenProvider.listDosen[index];
                 return Container(
                   decoration: BoxDecoration(
-                    color: dosen.status ? Colors.green.withOpacity(0.2) : Colors.grey.withOpacity(0.2),
+                    color: dosen.status
+                        ? Colors.green.withOpacity(0.2)
+                        : Colors.grey.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
@@ -399,9 +416,27 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
           ),
         ],
       ),
+      bottomNavigationBar: BottomAppBar(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            IconButton(
+              icon: Icon(Icons.home),
+              onPressed: () {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => HomePage()),
+                      (Route<dynamic> route) => false,
+                );
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
+
 
 
 
