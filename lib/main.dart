@@ -4,19 +4,21 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 
 void main() {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
 
-  // This widget is the root of your application.
+class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
+    return ChangeNotifierProvider<DosenProvider>(
       create: (_) => DosenProvider(),
       child: MaterialApp(
         title: 'Absensi App',
@@ -25,15 +27,10 @@ class MyApp extends StatelessWidget {
           visualDensity: VisualDensity.adaptivePlatformDensity,
         ),
         home: Scaffold(
-          body: Container(
-            decoration: const BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('images/unas.png'),
-                fit: BoxFit.cover,
-              ),
-            ),
-            child: HomePage(),
+          appBar: AppBar(
+            title: const Text('Universitas Nasional'),
           ),
+          body: HomePage(),
         ),
       ),
     );
@@ -46,79 +43,228 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  String searchQuery = '';
+  bool isLoggedIn = false;
+
+  @override
+  void initState() {
+    super.initState();
+    checkLoginStatus();
+  }
+
+  void checkLoginStatus() async {
+    bool loggedIn = await SessionManager.isLoggedIn();
+    setState(() {
+      isLoggedIn = loggedIn;
+    });
+  }
+
+  void logout() async {
+    bool confirmLogout = await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Logout Confirmation'),
+          content: Text('Are you sure you want to logout?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, true); // Setelah logout dikonfirmasi, pop dialog dengan nilai true
+              },
+              child: Text('Yes'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, false); // Jika logout dibatalkan, pop dialog dengan nilai false
+              },
+              child: Text('No'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmLogout == true) {
+      await SessionManager.setLoggedIn(false);
+      Fluttertoast.showToast(
+        msg: "Logout successful",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.green,
+        textColor: Colors.white,
+      );
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => HomePage()),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Universitas Nasional'),
+        actions: [
+          if (isLoggedIn)
+            IconButton(
+              icon: Icon(Icons.logout),
+              onPressed: logout,
+            ),
+        ],
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const SizedBox(height: 20),
-          Center(
-            child: Image.asset(
-              'images/unas.png',
-              height: 140, // Increase the height by 10%
-              width: 140, // Increase the width by 10%
-            ),
-          ),
-          const SizedBox(height: 10),
-          const Center(
-            child: Text(
-              'Daftar Kehadiran Pimpinan',
-              style: TextStyle(
-                fontSize: 23,
-                fontWeight: FontWeight.bold,
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.green,
+              ),
+              child: Text(
+                'Menu',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                ),
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: TextField(
-              decoration: InputDecoration(
-                labelText: 'Cari Nama',
-                prefixIcon: Icon(Icons.search),
-              ),
-              onChanged: (value) {
-                setState(() {
-                  searchQuery = value;
-                });
+            ListTile(
+              leading: Icon(Icons.list),
+              title: Text('List Pimpinan'),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => MahasiswaPage()),
+                );
               },
             ),
-          ),
-          Expanded(
-            child: Consumer<DosenProvider>(
+            if (!isLoggedIn)
+              ListTile(
+                leading: Icon(Icons.login),
+                title: Text('Sign In'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => MahasiswaLoginPage()),
+                  );
+                },
+              ),
+            if (isLoggedIn)
+              ListTile(
+                leading: Icon(Icons.logout),
+                title: Text('Sign Out'),
+                onTap: logout,
+              ),
+          ],
+        ),
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SizedBox(height: 20),
+            Center(
+              child: Image.asset(
+                'images/unas.png',
+                height: 140,
+                width: 140,
+              ),
+            ),
+            const SizedBox(height: 10),
+            const Center(
+              child: Text(
+                'Daftar Kehadiran Pimpinan',
+                style: TextStyle(
+                  fontSize: 23,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: TextField(
+                decoration: InputDecoration(
+                  labelText: 'Cari Nama',
+                  prefixIcon: Icon(Icons.search),
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                ),
+                onChanged: (value) {
+                  Provider.of<DosenProvider>(context, listen: false).updateSearchQuery(value);
+                },
+              ),
+            ),
+            Consumer<DosenProvider>(
               builder: (context, provider, _) {
-                final filteredList = provider.listDosen.where((dosen) {
-                  final name = dosen.nama.toLowerCase();
-                  final query = searchQuery.toLowerCase();
-                  return name.contains(query);
-                }).toList();
+                final filteredList = provider.filterDosenList();
 
                 return ListView.builder(
+                  physics: NeverScrollableScrollPhysics(),
+                  shrinkWrap: true,
                   itemCount: filteredList.length,
                   itemBuilder: (context, index) {
                     final dosen = filteredList[index];
                     return Container(
                       decoration: BoxDecoration(
-                        color: dosen.status ? Colors.green.withOpacity(0.2) : Colors.grey.withOpacity(0.2),
+                        color: dosen.status
+                            ? Colors.green.withOpacity(0.2)
+                            : Colors.grey.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
                       padding: const EdgeInsets.all(8),
                       child: ListTile(
-                        title: Text(dosen.nama),
-                        subtitle: Row(
-                          children: [
-                            CircleAvatar(
-                              radius: 8,
-                              backgroundColor: dosen.status ? Colors.green : Colors.grey,
+                        leading: ClipOval(
+                          child: Container(
+                            width: 60,
+                            height: 60,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              image: DecorationImage(
+                                image: AssetImage(dosen.imageUrl),
+                                fit: BoxFit.cover,
+                              ),
                             ),
-                            const SizedBox(width: 8),
-                            Text(dosen.status ? 'Hadir' : 'Tidak Hadir'),
+                          ),
+                        ),
+                        title: Text(
+                          dosen.jabatan,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 8),
+                            Text(
+                              dosen.nama,
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                CircleAvatar(
+                                  radius: 8,
+                                  backgroundColor: dosen.status ? Colors.green : Colors.grey,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  dosen.status ? 'Hadir' : 'Tidak Hadir',
+                                  style: TextStyle(
+                                    color: dosen.status ? Colors.green : Colors.grey,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ],
                         ),
                       ),
@@ -127,49 +273,77 @@ class _HomePageState extends State<HomePage> {
                 );
               },
             ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              Expanded(
-                child: ElevatedButton(
-                  child: const Text('Sign In'),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => MahasiswaLoginPage()),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        ],
+            const SizedBox(height: 16),
+          ],
+        ),
       ),
     );
   }
 }
 
+
+
 class DosenModel {
+  String jabatan;
   String nama;
   bool status;
+  String imageUrl;
 
-  DosenModel(this.nama, this.status);
+  DosenModel(this.jabatan, this.nama, this.status, this.imageUrl);
 }
 
-class DosenProvider with ChangeNotifier {
+class DosenProvider extends ChangeNotifier {
   List<DosenModel> _listDosen = [
-    DosenModel('John Doe', true),
-    DosenModel('Jane Smith', false),
-    DosenModel('Michael Johnson', true),
+    DosenModel('Rektor Universitas Nasional', 'Dr. El Amry Bermawi Putera, M.A.', true, 'images/rektor.png'),
+    DosenModel('Wakil Rektor Bidang Akademik, Kemahasiswaan dan Alumni', 'Dr. Suryono Efendi, S.E., M.B.A., M.M.', false, 'images/warek1.png'),
+    DosenModel('Wakil Rektor Bidang Administrasi Umum, Keuangan, dan SDM', 'Prof. Dr. Drs. Eko Sugiyanto, M.Si.', true, 'images/warek2.png'),
+    DosenModel('Wakil Rektor Bidang Penelitian, Pengabdian Kepada Masyarakat dan Kerjasama', 'Prof. Dr. Ernawati Sinaga, M.S., Apt.', true, 'images/warek3.png'),
+    DosenModel('Sekretaris Rektorat', 'Yusuf Wibisono, S.I.P., M.Si.', true, 'images/sekretarisrektor.png'),
+    DosenModel('Penasihat Manajemen UNAS', 'Prof. Dr. Umar Basalim, DES.', true, 'images/penasehat.png'),
   ];
 
+  String _searchQuery = '';
+
   List<DosenModel> get listDosen => _listDosen;
+
+  String get searchQuery => _searchQuery;
+
+  void updateSearchQuery(String query) {
+    _searchQuery = query.toLowerCase();
+    notifyListeners();
+  }
+
+  List<DosenModel> filterDosenList() {
+    if (_searchQuery.isEmpty) {
+      return _listDosen;
+    } else {
+      return _listDosen.where((dosen) {
+        final name = dosen.jabatan.toLowerCase();
+        return name.contains(_searchQuery);
+      }).toList();
+    }
+  }
 
   void updateStatus(int index, bool value) {
     _listDosen[index].status = value;
     notifyListeners();
+  }
+}
+
+
+class SessionManager {
+  static const String isLoggedInKey = 'isLoggedIn';
+
+  // Save the user's login status
+  static Future<void> setLoggedIn(bool isLoggedIn) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(isLoggedInKey, isLoggedIn);
+  }
+
+  // Retrieve the user's login status
+  static Future<bool> isLoggedIn() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(isLoggedInKey) ?? false;
   }
 }
 
@@ -215,6 +389,7 @@ class _MahasiswaLoginPageState extends State<MahasiswaLoginPage> {
       _loginError = false;
     });
 
+
     final success = await _performLogin();
 
     if (success) {
@@ -245,31 +420,53 @@ class _MahasiswaLoginPageState extends State<MahasiswaLoginPage> {
               enableSuggestions: false,
               autocorrect: false,
               controller: _usernameController,
-              decoration: const InputDecoration(
-                  labelText: 'Username',
-                  hintText: 'Enter your username'
+              decoration: InputDecoration(
+                labelText: 'Username',
+                hintText: 'Enter your username',
+                prefixIcon: Icon(Icons.person),
               ),
             ),
+            SizedBox(height: 16),
             TextFormField(
               enableSuggestions: false,
               autocorrect: false,
               controller: _passwordController,
-              decoration: const InputDecoration(
-                  labelText: 'Password',
-                  hintText: 'Enter your password'
+              decoration: InputDecoration(
+                labelText: 'Password',
+                hintText: 'Enter your password',
+                prefixIcon: Icon(Icons.lock),
               ),
               obscureText: true,
             ),
             if (_loginError)
-              const Text(
-                'Username or password is incorrect',
-                style: TextStyle(
-                  color: Colors.red,
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  'Username or password is incorrect',
+                  style: TextStyle(
+                    color: Colors.red,
+                  ),
                 ),
               ),
+            SizedBox(height: 24),
             ElevatedButton(
               onPressed: _isLoggingIn ? null : _login,
-              child: _isLoggingIn ? const CircularProgressIndicator() : const Text('Login'),
+              child: _isLoggingIn
+                  ? SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+                  : Text('Login'),
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
             ),
           ],
         ),
@@ -290,6 +487,7 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
   bool isDateStatusUpdated = false;
   late ValueNotifier<DateTime> selectedDate;
   late Timer timer;
+  bool isLoggedIn = false;
 
   @override
   void initState() {
@@ -305,6 +503,31 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
         formattedTime = DateFormat('HH:mm').format(DateTime.now());
       });
     });
+
+    checkLoginStatus();
+  }
+
+  void checkLoginStatus() async {
+    bool loggedIn = await SessionManager.isLoggedIn();
+    setState(() {
+      isLoggedIn = loggedIn;
+    });
+
+    if (!isLoggedIn) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => MahasiswaLoginPage()),
+      );
+    }
+  }
+
+  void logout() async {
+    await SessionManager.setLoggedIn(false);
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => HomePage()),
+          (Route<dynamic> route) => false,
+    );
   }
 
   @override
@@ -320,14 +543,6 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
     super.dispose();
   }
 
-  void _logout() {
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (context) => HomePage()),
-          (Route<dynamic> route) => false,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -337,109 +552,155 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
         actions: [
           IconButton(
             icon: Icon(Icons.logout),
-            onPressed: _logout,
+            onPressed: logout,
           ),
         ],
       ),
       body: Column(
         children: [
-          SizedBox(height: 10),
-          Center(
-            child: Column(
+          SizedBox(height: 20),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  formattedTime,
+                  'Waktu:',
                   style: TextStyle(
-                    fontSize: 30,
+                    fontSize: 24,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                Text(
-                  formattedDate,
-                  style: TextStyle(
-                    fontSize: 30,
-                  ),
+                ValueListenableBuilder<DateTime>(
+                  valueListenable: selectedDate,
+                  builder: (context, value, child) {
+                    return Text(
+                      DateFormat('HH:mm').format(value),
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    );
+                  },
                 ),
               ],
             ),
           ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: dosenProvider.listDosen.length,
-              itemBuilder: (context, index) {
-                final dosen = dosenProvider.listDosen[index];
-                return Container(
-                  decoration: BoxDecoration(
-                    color: dosen.status
-                        ? Colors.green.withOpacity(0.2)
-                        : Colors.grey.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
+          SizedBox(height: 10),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Tanggal:',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
                   ),
-                  margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
-                  padding: const EdgeInsets.all(8),
-                  child: ListTile(
-                    title: Text(
-                      dosen.nama,
-                      style: const TextStyle(
+                ),
+                ValueListenableBuilder<DateTime>(
+                  valueListenable: selectedDate,
+                  builder: (context, value, child) {
+                    return Text(
+                      DateFormat('dd MMMM yyyy').format(value),
+                      style: TextStyle(
+                        fontSize: 28,
                         fontWeight: FontWeight.bold,
                       ),
-                    ),
-                    subtitle: Text(
-                      dosen.status
-                          ? '${DateFormat('dd MMMM yyyy').format(DateTime.now())}, Jam $formattedTime '
-                          : 'Tidak Hadir',
-                    ),
-                    trailing: Switch(
-                      value: dosen.status,
-                      onChanged: (value) {
-                        setState(() {
-                          dosenProvider.updateStatus(index, value);
-                          if (value && !isDateStatusUpdated) {
-                            formattedTime =
-                                DateFormat('HH:mm').format(DateTime.now());
-                            formattedDate =
-                                DateFormat('dd MMMM yyyy').format(DateTime.now());
-                            isDateStatusUpdated = true;
-                          } else if (!value) {
-                            isDateStatusUpdated = false;
-                          }
-                        });
-                      },
-                      activeTrackColor: Colors.green.withOpacity(0.5),
-                      activeColor: Colors.green,
-                      inactiveThumbColor: Colors.grey,
-                    ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 20),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  ListView.builder(
+                    physics: NeverScrollableScrollPhysics(),
+                    shrinkWrap: true,
+                    itemCount: dosenProvider.listDosen.length,
+                    itemBuilder: (context, index) {
+                      final dosen = dosenProvider.listDosen[index];
+                      return Container(
+                        decoration: BoxDecoration(
+                          color: dosen.status
+                              ? Colors.green.withOpacity(0.2)
+                              : Colors.grey.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
+                        padding: const EdgeInsets.all(8),
+                        child: ListTile(
+                          title: Text(
+                            dosen.jabatan,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
+                          ),
+                          subtitle: Text(
+                            dosen.status
+                                ? 'Hadir pada ${DateFormat('dd MMMM yyyy').format(DateTime.now())}, Jam $formattedTime'
+                                : 'Tidak Hadir',
+                            style: TextStyle(
+                              fontSize: 16,
+                            ),
+                          ),
+                          trailing: Switch(
+                            value: dosen.status,
+                            onChanged: (value) {
+                              setState(() {
+                                dosenProvider.updateStatus(index, value);
+                                if (value && !isDateStatusUpdated) {
+                                  formattedTime =
+                                      DateFormat('HH:mm').format(DateTime.now());
+                                  formattedDate =
+                                      DateFormat('dd MMMM yyyy').format(DateTime.now());
+                                  isDateStatusUpdated = true;
+                                } else if (!value) {
+                                  isDateStatusUpdated = false;
+                                }
+                              });
+                            },
+                            activeTrackColor: Colors.green.withOpacity(0.5),
+                            activeColor: Colors.green,
+                            inactiveThumbColor: Colors.grey,
+                          ),
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
+                ],
+              ),
             ),
           ),
         ],
       ),
       bottomNavigationBar: BottomAppBar(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            IconButton(
-              icon: Icon(Icons.home),
-              onPressed: () {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => HomePage()),
-                      (Route<dynamic> route) => false,
-                );
-              },
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              IconButton(
+                icon: Icon(Icons.home),
+                onPressed: () {
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (context) => HomePage()),
+                        (Route<dynamic> route) => false,
+                  );
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
-
-
-
-
-
-
 

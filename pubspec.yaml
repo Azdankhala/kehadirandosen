@@ -30,6 +30,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  shared_preferences: ^2.0.8
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -38,7 +39,9 @@ dependencies:
   postgres: ^2.4.1
   intl: ^0.18.1
   provider: ^6.0.1
+  fluttertoast: ^8.0.7
   table_calendar: ^3.0.9
+  cached_network_image: ^3.0.0
 
 dev_dependencies:
   flutter_test:
@@ -64,8 +67,22 @@ flutter:
 
 
   assets:
-     - images/unas.png
-  #   - images/a_dot_ham.jpeg
+    - images/unas.png
+    - images/profile.png
+    - images/rektor.png
+    - images/warek1.png
+    - images/warek2.png
+    - images/warek3.png
+    - images/penasehat.png
+    - images/sekretarisrektor.png
+    - images/dekanbahasasastra.png
+    - images/dekanbiologipertanian.png
+    - images/dekanfisip.png
+    - images/dekanekonomibisnis.png
+    - images/dekanhukum.png
+    - images/dekankesehatan.png
+    - images/dekantekniksains.png
+    - images/dekanti.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
