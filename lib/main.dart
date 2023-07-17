@@ -7,11 +7,9 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
-
 void main() {
   runApp(const MyApp());
 }
-
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
@@ -26,12 +24,7 @@ class MyApp extends StatelessWidget {
           primarySwatch: Colors.green,
           visualDensity: VisualDensity.adaptivePlatformDensity,
         ),
-        home: Scaffold(
-          appBar: AppBar(
-            title: const Text('Universitas Nasional'),
-          ),
-          body: HomePage(),
-        ),
+        home: HomePage(),
       ),
     );
   }
@@ -94,7 +87,7 @@ class _HomePageState extends State<HomePage> {
       );
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => HomePage()),
+        MaterialPageRoute(builder: (context) => MyApp()),
       );
     }
   }
@@ -104,13 +97,6 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Universitas Nasional'),
-        actions: [
-          if (isLoggedIn)
-            IconButton(
-              icon: Icon(Icons.logout),
-              onPressed: logout,
-            ),
-        ],
       ),
       drawer: Drawer(
         child: ListView(
@@ -281,8 +267,6 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-
-
 class DosenModel {
   String jabatan;
   String nama;
@@ -330,7 +314,6 @@ class DosenProvider extends ChangeNotifier {
   }
 }
 
-
 class SessionManager {
   static const String isLoggedInKey = 'isLoggedIn';
 
@@ -362,7 +345,7 @@ class _MahasiswaLoginPageState extends State<MahasiswaLoginPage> {
   Future<bool> _performLogin() async {
     final connection = PostgreSQLConnection(
       '10.0.2.2',
-      8080,
+      8080  ,
       'unas',
       username: 'postgres',
     );
@@ -370,7 +353,7 @@ class _MahasiswaLoginPageState extends State<MahasiswaLoginPage> {
     await connection.open();
 
     final result = await connection.query(
-      'SELECT COUNT(*) FROM kehadiranpimpinan WHERE username = @username AND password = @password;',
+      'SELECT COUNT(*) FROM tbl_dosen WHERE username = @username AND password = @password;',
       substitutionValues: {
         'username': _usernameController.text,
         'password': _passwordController.text,
@@ -389,11 +372,11 @@ class _MahasiswaLoginPageState extends State<MahasiswaLoginPage> {
       _loginError = false;
     });
 
-
     final success = await _performLogin();
 
     if (success) {
-      Navigator.push(
+      await SessionManager.setLoggedIn(true);
+      Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => MahasiswaPage()),
       );
@@ -539,7 +522,7 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
   @override
   void dispose() {
     selectedDate.dispose();
-    timer.cancel(); // Cancel the timer when the widget is disposed
+    timer.cancel();
     super.dispose();
   }
 
@@ -549,12 +532,6 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
       appBar: AppBar(
         title: const Text('Kehadiran'),
         automaticallyImplyLeading: false,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.logout),
-            onPressed: logout,
-          ),
-        ],
       ),
       body: Column(
         children: [
@@ -703,4 +680,3 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
     );
   }
 }
-
