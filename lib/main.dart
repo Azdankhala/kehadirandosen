@@ -3,7 +3,6 @@ import 'package:postgres/postgres.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
-import 'package:intl/date_symbol_data_local.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
@@ -61,13 +60,13 @@ class _HomePageState extends State<HomePage> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(context, true); // Setelah logout dikonfirmasi, pop dialog dengan nilai true
+                Navigator.pop(context, true);
               },
               child: Text('Yes'),
             ),
             TextButton(
               onPressed: () {
-                Navigator.pop(context, false); // Jika logout dibatalkan, pop dialog dengan nilai false
+                Navigator.pop(context, false);
               },
               child: Text('No'),
             ),
@@ -131,7 +130,8 @@ class _HomePageState extends State<HomePage> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => MahasiswaLoginPage()),
+                    MaterialPageRoute(
+                        builder: (context) => MahasiswaLoginPage()),
                   );
                 },
               ),
@@ -179,7 +179,8 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
                 onChanged: (value) {
-                  Provider.of<DosenProvider>(context, listen: false).updateSearchQuery(value);
+                  Provider.of<DosenProvider>(context, listen: false)
+                      .updateSearchQuery(value);
                 },
               ),
             ),
@@ -200,7 +201,8 @@ class _HomePageState extends State<HomePage> {
                             : Colors.grey.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
+                      margin: const EdgeInsets.symmetric(
+                          vertical: 4, horizontal: 16),
                       padding: const EdgeInsets.all(8),
                       child: ListTile(
                         leading: ClipOval(
@@ -239,13 +241,15 @@ class _HomePageState extends State<HomePage> {
                               children: [
                                 CircleAvatar(
                                   radius: 8,
-                                  backgroundColor: dosen.status ? Colors.green : Colors.grey,
+                                  backgroundColor:
+                                  dosen.status ? Colors.green : Colors.grey,
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
                                   dosen.status ? 'Hadir' : 'Tidak Hadir',
                                   style: TextStyle(
-                                    color: dosen.status ? Colors.green : Colors.grey,
+                                    color:
+                                    dosen.status ? Colors.green : Colors.grey,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -278,12 +282,36 @@ class DosenModel {
 
 class DosenProvider extends ChangeNotifier {
   List<DosenModel> _listDosen = [
-    DosenModel('Rektor Universitas Nasional', 'Dr. El Amry Bermawi Putera, M.A.', true, 'images/rektor.png'),
-    DosenModel('Wakil Rektor Bidang Akademik, Kemahasiswaan dan Alumni', 'Dr. Suryono Efendi, S.E., M.B.A., M.M.', false, 'images/warek1.png'),
-    DosenModel('Wakil Rektor Bidang Administrasi Umum, Keuangan, dan SDM', 'Prof. Dr. Drs. Eko Sugiyanto, M.Si.', true, 'images/warek2.png'),
-    DosenModel('Wakil Rektor Bidang Penelitian, Pengabdian Kepada Masyarakat dan Kerjasama', 'Prof. Dr. Ernawati Sinaga, M.S., Apt.', true, 'images/warek3.png'),
-    DosenModel('Sekretaris Rektorat', 'Yusuf Wibisono, S.I.P., M.Si.', true, 'images/sekretarisrektor.png'),
-    DosenModel('Penasihat Manajemen UNAS', 'Prof. Dr. Umar Basalim, DES.', true, 'images/penasehat.png'),
+    DosenModel(
+        'Rektor Universitas Nasional',
+        'Dr. El Amry Bermawi Putera, M.A.',
+        true,
+        'images/rektor.png'),
+    DosenModel(
+        'Wakil Rektor Bidang Akademik, Kemahasiswaan dan Alumni',
+        'Dr. Suryono Efendi, S.E., M.B.A., M.M.',
+        false,
+        'images/warek1.png'),
+    DosenModel(
+        'Wakil Rektor Bidang Administrasi Umum, Keuangan, dan SDM',
+        'Prof. Dr. Drs. Eko Sugiyanto, M.Si.',
+        true,
+        'images/warek2.png'),
+    DosenModel(
+        'Wakil Rektor Bidang Penelitian, Pengabdian Kepada Masyarakat dan Kerjasama',
+        'Prof. Dr. Ernawati Sinaga, M.S., Apt.',
+        true,
+        'images/warek3.png'),
+    DosenModel(
+        'Sekretaris Rektorat',
+        'Yusuf Wibisono, S.I.P., M.Si.',
+        true,
+        'images/sekretarisrektor.png'),
+    DosenModel(
+        'Penasihat Manajemen UNAS',
+        'Prof. Dr. Umar Basalim, DES.',
+        true,
+        'images/penasehat.png'),
   ];
 
   String _searchQuery = '';
@@ -317,13 +345,11 @@ class DosenProvider extends ChangeNotifier {
 class SessionManager {
   static const String isLoggedInKey = 'isLoggedIn';
 
-  // Save the user's login status
   static Future<void> setLoggedIn(bool isLoggedIn) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setBool(isLoggedInKey, isLoggedIn);
   }
 
-  // Retrieve the user's login status
   static Future<bool> isLoggedIn() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool(isLoggedInKey) ?? false;
@@ -345,7 +371,7 @@ class _MahasiswaLoginPageState extends State<MahasiswaLoginPage> {
   Future<bool> _performLogin() async {
     final connection = PostgreSQLConnection(
       '10.0.2.2',
-      8080  ,
+      8080,
       'unas',
       username: 'postgres',
     );
@@ -458,6 +484,25 @@ class _MahasiswaLoginPageState extends State<MahasiswaLoginPage> {
   }
 }
 
+class DosenNewModel {
+  int id;
+  String nama;
+  String jabatan;
+  bool status;
+  String imageUrl;
+  String waktuHadir; // Properti waktuHadir ditambahkan
+
+  DosenNewModel({
+    required this.id,
+    required this.nama,
+    required this.jabatan,
+    required this.status,
+    required this.imageUrl,
+    this.waktuHadir = '', // Properti waktuHadir diinisialisasi dengan nilai default
+  });
+}
+
+
 class MahasiswaPage extends StatefulWidget {
   @override
   _MahasiswaPageState createState() => _MahasiswaPageState();
@@ -467,27 +512,19 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
   late DosenProvider dosenProvider;
   late String formattedDate;
   late String formattedTime;
-  bool isDateStatusUpdated = false;
-  late ValueNotifier<DateTime> selectedDate;
-  late Timer timer;
   bool isLoggedIn = false;
+  List<DosenNewModel> listDosenNewModel = [];
+  late Timer timer;
 
   @override
   void initState() {
     super.initState();
     formattedDate = DateFormat('dd MMMM yyyy').format(DateTime.now());
     formattedTime = DateFormat('HH:mm').format(DateTime.now());
-    selectedDate = ValueNotifier(DateTime.now());
-    initializeDateFormatting();
-
-    // Start the timer to update the time every second
-    timer = Timer.periodic(Duration(seconds: 1), (Timer t) {
-      setState(() {
-        formattedTime = DateFormat('HH:mm').format(DateTime.now());
-      });
-    });
 
     checkLoginStatus();
+    getData();
+    startTimer();
   }
 
   void checkLoginStatus() async {
@@ -504,6 +541,14 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
     }
   }
 
+  void startTimer() {
+    timer = Timer.periodic(Duration(seconds: 1), (Timer t) {
+      setState(() {
+        formattedTime = DateFormat('HH:mm').format(DateTime.now());
+      });
+    });
+  }
+
   void logout() async {
     await SessionManager.setLoggedIn(false);
     Navigator.pushAndRemoveUntil(
@@ -513,170 +558,279 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
     );
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    dosenProvider = Provider.of<DosenProvider>(context);
+  void getData() async {
+    final connection = PostgreSQLConnection(
+      '10.0.2.2',
+      8080,
+      'unas',
+      username: 'postgres',
+    );
+
+    await connection.open();
+
+    final result = await connection.query('SELECT * FROM tbl_dosen');
+
+    await connection.close();
+
+    setState(() {
+      listDosenNewModel = result
+          .map((row) => DosenNewModel(
+        id: row[0] as int,
+        nama: row[1] as String,
+        jabatan: row[2] as String,
+        status: row[3] as bool,
+        imageUrl: row[4] as String,
+      ))
+          .toList();
+    });
   }
 
-  @override
-  void dispose() {
-    selectedDate.dispose();
-    timer.cancel();
-    super.dispose();
+  void updateStatus(int index, bool value) async {
+    final connection = PostgreSQLConnection(
+      '10.0.2.2',
+      8080,
+      'unas',
+      username: 'postgres',
+    );
+
+    await connection.open();
+
+    await connection.execute(
+      'UPDATE tbl_dosen SET status = @status WHERE id = @id',
+      substitutionValues: {
+        'status': value,
+        'id': listDosenNewModel[index].id,
+      },
+    );
+
+    await connection.close();
+
+    setState(() {
+      listDosenNewModel[index].status = value;
+    });
+  }
+
+  Future<bool> confirmDialog(BuildContext context, int index) async {
+    return (await showDialog<bool?>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Confirmation'),
+          content: RichText(
+            text: TextSpan(
+              text: 'Are you sure you want to update the status for ',
+              style: DefaultTextStyle.of(context).style,
+              children: <TextSpan>[
+                TextSpan(
+                  text: listDosenNewModel[index].nama,
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                TextSpan(text: '?'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Yes'),
+              onPressed: () {
+                Navigator.of(context).pop(true);
+              },
+            ),
+            TextButton(
+              child: Text('No'),
+              onPressed: () {
+                Navigator.of(context).pop(false);
+              },
+            ),
+          ],
+        );
+      },
+    )) ??
+        false;
   }
 
   @override
   Widget build(BuildContext context) {
+    dosenProvider = Provider.of<DosenProvider>(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Kehadiran'),
-        automaticallyImplyLeading: false,
+        title: const Text('List Pimpinan'),
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.green,
+                image: DecorationImage(
+                  image: AssetImage('assets/images/background.jpg'),
+                  fit: BoxFit.cover,
+                ),
+              ),
+              child: Stack(
+                children: [
+                  Positioned(
+                    bottom: 12,
+                    left: 12,
+                    child: Text(
+                      'Menu',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (isLoggedIn)
+              ListTile(
+                leading: Icon(Icons.logout),
+                title: Text('Sign Out'),
+                onTap: logout,
+              ),
+          ],
+        ),
       ),
       body: Column(
         children: [
-          SizedBox(height: 20),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Waktu:',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                ValueListenableBuilder<DateTime>(
-                  valueListenable: selectedDate,
-                  builder: (context, value, child) {
-                    return Text(
-                      DateFormat('HH:mm').format(value),
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: 10),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Tanggal:',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                ValueListenableBuilder<DateTime>(
-                  valueListenable: selectedDate,
-                  builder: (context, value, child) {
-                    return Text(
-                      DateFormat('dd MMMM yyyy').format(value),
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: 20),
-          Expanded(
-            child: SingleChildScrollView(
+          Card(
+            color: Colors.green,
+            elevation: 4,
+            margin: EdgeInsets.all(16),
+            child: Padding(
+              padding: EdgeInsets.all(16),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  ListView.builder(
-                    physics: NeverScrollableScrollPhysics(),
-                    shrinkWrap: true,
-                    itemCount: dosenProvider.listDosen.length,
-                    itemBuilder: (context, index) {
-                      final dosen = dosenProvider.listDosen[index];
-                      return Container(
-                        decoration: BoxDecoration(
-                          color: dosen.status
-                              ? Colors.green.withOpacity(0.2)
-                              : Colors.grey.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
-                        padding: const EdgeInsets.all(8),
-                        child: ListTile(
-                          title: Text(
-                            dosen.jabatan,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                            ),
-                          ),
-                          subtitle: Text(
-                            dosen.status
-                                ? 'Hadir pada ${DateFormat('dd MMMM yyyy').format(DateTime.now())}, Jam $formattedTime'
-                                : 'Tidak Hadir',
-                            style: TextStyle(
-                              fontSize: 16,
-                            ),
-                          ),
-                          trailing: Switch(
-                            value: dosen.status,
-                            onChanged: (value) {
-                              setState(() {
-                                dosenProvider.updateStatus(index, value);
-                                if (value && !isDateStatusUpdated) {
-                                  formattedTime =
-                                      DateFormat('HH:mm').format(DateTime.now());
-                                  formattedDate =
-                                      DateFormat('dd MMMM yyyy').format(DateTime.now());
-                                  isDateStatusUpdated = true;
-                                } else if (!value) {
-                                  isDateStatusUpdated = false;
-                                }
-                              });
-                            },
-                            activeTrackColor: Colors.green.withOpacity(0.5),
-                            activeColor: Colors.green,
-                            inactiveThumbColor: Colors.grey,
-                          ),
-                        ),
-                      );
-                    },
+                  Text(
+                    'Tanggal',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    formattedDate,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'Waktu',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    formattedTime,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 48,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
             ),
           ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: listDosenNewModel.length,
+              itemBuilder: (context, index) {
+                return Card(
+                  elevation: 4,
+                  margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundImage:
+                      AssetImage(listDosenNewModel[index].imageUrl),
+                    ),
+                    title: Text(
+                      listDosenNewModel[index].jabatan,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(listDosenNewModel[index].nama),
+                        if (listDosenNewModel[index].status)
+                          Text(
+                            'Waktu Hadir: ${listDosenNewModel[index].waktuHadir}',
+                            style: TextStyle(
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                      ],
+                    ),
+                    trailing: ElevatedButton(
+                      onPressed: () async {
+                        bool shouldUpdate =
+                        await confirmDialog(context, index);
+                        if (shouldUpdate) {
+                          updateStatus(
+                              index, !listDosenNewModel[index].status);
+                          if (!listDosenNewModel[index].status) {
+                            DateTime currentTime = DateTime.now();
+                            String waktuHadir =
+                            DateFormat('HH:mm').format(currentTime);
+                            setState(() {
+                              listDosenNewModel[index].waktuHadir = waktuHadir;
+                            });
+                          }
+                        }
+                      },
+                      child: Text(
+                        listDosenNewModel[index].status ? 'Tidak Hadir' : 'Hadir',
+                        style: TextStyle(
+                          fontSize: 14,
+                        ),
+                      ),
+                      style: ButtonStyle(
+                        shape:
+                        MaterialStateProperty.all<RoundedRectangleBorder>(
+                          RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                        ),
+                        padding:
+                        MaterialStateProperty.all<EdgeInsetsGeometry>(
+                          EdgeInsets.symmetric(vertical: 8),
+                        ),
+                        backgroundColor:
+                        MaterialStateProperty.all<Color>(
+                          listDosenNewModel[index].status
+                              ? Colors.red
+                              : Colors.green,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
         ],
       ),
-      bottomNavigationBar: BottomAppBar(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              IconButton(
-                icon: Icon(Icons.home),
-                onPressed: () {
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(builder: (context) => HomePage()),
-                        (Route<dynamic> route) => false,
-                  );
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
     );
+  }
+
+  @override
+  void dispose() {
+    timer.cancel();
+    super.dispose();
   }
 }
