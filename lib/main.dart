@@ -131,7 +131,8 @@ class _HomePageState extends State<HomePage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => MahasiswaLoginPage()),
+                      builder: (context) => MahasiswaLoginPage(),
+                    ),
                   );
                 },
               ),
@@ -270,6 +271,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
+
+
 
 class DosenModel {
   String jabatan;
@@ -688,10 +691,20 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
             ),
             if (isLoggedIn)
               ListTile(
-                leading: Icon(Icons.logout),
-                title: Text('Sign Out'),
-                onTap: logout,
+                leading: Icon(Icons.home),
+                title: Text('Home'),
+                onTap: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => HomePage()),
+                  );
+                },
               ),
+            ListTile(
+              leading: Icon(Icons.logout),
+              title: Text('Sign Out'),
+              onTap: logout,
+            ),
           ],
         ),
       ),
@@ -783,39 +796,15 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
                         if (shouldUpdate) {
                           updateStatus(
                               index, !listDosenNewModel[index].status);
-                          if (!listDosenNewModel[index].status) {
-                            DateTime currentTime = DateTime.now();
-                            String waktuHadir =
-                            DateFormat('HH:mm').format(currentTime);
-                            setState(() {
-                              listDosenNewModel[index].waktuHadir = waktuHadir;
-                            });
-                          }
                         }
                       },
                       child: Text(
-                        listDosenNewModel[index].status ? 'Tidak Hadir' : 'Hadir',
-                        style: TextStyle(
-                          fontSize: 14,
-                        ),
+                        listDosenNewModel[index].status ? 'Hadir' : 'Absen',
                       ),
-                      style: ButtonStyle(
-                        shape:
-                        MaterialStateProperty.all<RoundedRectangleBorder>(
-                          RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(24),
-                          ),
-                        ),
-                        padding:
-                        MaterialStateProperty.all<EdgeInsetsGeometry>(
-                          EdgeInsets.symmetric(vertical: 8),
-                        ),
-                        backgroundColor:
-                        MaterialStateProperty.all<Color>(
-                          listDosenNewModel[index].status
-                              ? Colors.red
-                              : Colors.green,
-                        ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: listDosenNewModel[index].status
+                            ? Colors.green
+                            : Colors.red,
                       ),
                     ),
                   ),
