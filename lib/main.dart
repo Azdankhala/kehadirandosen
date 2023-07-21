@@ -23,7 +23,11 @@ class MyApp extends StatelessWidget {
           primarySwatch: Colors.green,
           visualDensity: VisualDensity.adaptivePlatformDensity,
         ),
-        home: HomePage(),
+        initialRoute: '/',
+        routes: {
+          '/': (context) => HomePage(),
+          '/mahasiswa': (context) => MahasiswaPage(),
+        },
       ),
     );
   }
@@ -84,10 +88,7 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: Colors.green,
         textColor: Colors.white,
       );
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => MyApp()),
-      );
+      Navigator.pushReplacementNamed(context, '/');
     }
   }
 
@@ -113,27 +114,12 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
             ),
-            ListTile(
-              leading: Icon(Icons.list),
-              title: Text('List Pimpinan'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => MahasiswaPage()),
-                );
-              },
-            ),
             if (!isLoggedIn)
               ListTile(
                 leading: Icon(Icons.login),
                 title: Text('Sign In'),
                 onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => MahasiswaLoginPage(),
-                    ),
-                  );
+                  Navigator.pushNamed(context, '/mahasiswa');
                 },
               ),
             if (isLoggedIn)
@@ -141,6 +127,23 @@ class _HomePageState extends State<HomePage> {
                 leading: Icon(Icons.logout),
                 title: Text('Sign Out'),
                 onTap: logout,
+              ),
+            // Hide the "Home" button when on the HomePage
+            if (ModalRoute.of(context)?.settings.name != '/')
+              ListTile(
+                leading: Icon(Icons.home),
+                title: Text('Home'),
+                onTap: () {
+                  Navigator.pushReplacementNamed(context, '/');
+                },
+              ),
+            if (isLoggedIn)
+              ListTile(
+                leading: Icon(Icons.list),
+                title: Text('List Pimpinan'),
+                onTap: () {
+                  Navigator.pushNamed(context, '/mahasiswa');
+                },
               ),
           ],
         ),
@@ -491,7 +494,7 @@ class DosenNewModel {
   String jabatan;
   bool status;
   String imageUrl;
-  String waktuHadir; // Properti waktuHadir ditambahkan
+  String waktuHadir;
 
   DosenNewModel({
     required this.id,
@@ -499,7 +502,7 @@ class DosenNewModel {
     required this.jabatan,
     required this.status,
     required this.imageUrl,
-    this.waktuHadir = '', // Properti waktuHadir diinisialisasi dengan nilai default
+    this.waktuHadir = '', // Initialize waktuHadir with an empty string
   });
 }
 
