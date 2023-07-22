@@ -26,7 +26,8 @@ class MyApp extends StatelessWidget {
         initialRoute: '/',
         routes: {
           '/': (context) => HomePage(),
-          '/mahasiswa': (context) => MahasiswaPage(),
+          '/mahasiswa': (context) => MahasiswaLoginPage(),
+          '/mahasiswa_page': (context) => MahasiswaPage(),
         },
       ),
     );
@@ -142,7 +143,7 @@ class _HomePageState extends State<HomePage> {
                 leading: Icon(Icons.list),
                 title: Text('List Pimpinan'),
                 onTap: () {
-                  Navigator.pushNamed(context, '/mahasiswa');
+                  Navigator.pushNamed(context, '/mahasiswa_page');
                 },
               ),
           ],
@@ -494,7 +495,7 @@ class DosenNewModel {
   String jabatan;
   bool status;
   String imageUrl;
-  String waktuHadir;
+  String? waktuHadir; // Change the data type to String?
 
   DosenNewModel({
     required this.id,
@@ -502,7 +503,7 @@ class DosenNewModel {
     required this.jabatan,
     required this.status,
     required this.imageUrl,
-    this.waktuHadir = '', // Initialize waktuHadir with an empty string
+    this.waktuHadir, // No need to initialize it with an empty string
   });
 }
 
@@ -519,6 +520,7 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
   bool isLoggedIn = false;
   List<DosenNewModel> listDosenNewModel = [];
   late Timer timer;
+  late String? loggedInUsername; // Variable to store the logged-in username
 
   @override
   void initState() {
@@ -578,13 +580,14 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
 
     setState(() {
       listDosenNewModel = result
-          .map((row) => DosenNewModel(
-        id: row[0] as int,
-        nama: row[1] as String,
-        jabatan: row[2] as String,
-        status: row[3] as bool,
-        imageUrl: row[4] as String,
-      ))
+          .map((row) =>
+          DosenNewModel(
+            id: row[0] as int,
+            nama: row[1] as String,
+            jabatan: row[2] as String,
+            status: row[3] as bool,
+            imageUrl: row[4] as String,
+          ))
           .toList();
     });
   }
@@ -599,10 +602,14 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
 
     await connection.open();
 
+    // Set waktuHadir to current time if value is true, otherwise set it to null
+    String? waktuHadir = value ? DateFormat('HH:mm').format(DateTime.now()) : null;
+
     await connection.execute(
-      'UPDATE tbl_dosen SET status = @status WHERE id = @id',
+      'UPDATE tbl_dosen SET status = @status, "waktuHadir" = @waktuHadir WHERE id = @id',
       substitutionValues: {
         'status': value,
+        'waktuHadir': waktuHadir,
         'id': listDosenNewModel[index].id,
       },
     );
@@ -611,6 +618,7 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
 
     setState(() {
       listDosenNewModel[index].status = value;
+      listDosenNewModel[index].waktuHadir = waktuHadir; // Update waktuHadir in the DosenNewModel
     });
   }
 
@@ -781,9 +789,16 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(listDosenNewModel[index].nama),
-                        if (listDosenNewModel[index].status)
+                        if (listDosenNewModel[index].waktuHadir != null)
                           Text(
                             'Waktu Hadir: ${listDosenNewModel[index].waktuHadir}',
+                            style: TextStyle(
+                              fontStyle: FontStyle.italic,
+                            ),
+                          )
+                        else
+                          Text(
+                            'Tidak Hadir',
                             style: TextStyle(
                               fontStyle: FontStyle.italic,
                             ),
