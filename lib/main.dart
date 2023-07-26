@@ -236,9 +236,9 @@ class _HomePageState extends State<HomePage> {
                             const SizedBox(height: 8),
                             Text(
                               dosen.nama,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 16,
-                                color: Colors.grey[600],
+                                color: Colors.grey,
                               ),
                             ),
                             const SizedBox(height: 8),
@@ -253,8 +253,9 @@ class _HomePageState extends State<HomePage> {
                                 Text(
                                   dosen.status ? 'Hadir' : 'Tidak Hadir',
                                   style: TextStyle(
-                                    color:
-                                    dosen.status ? Colors.green : Colors.grey,
+                                    color: dosen.status
+                                        ? Colors.green
+                                        : Colors.grey,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -360,6 +361,7 @@ class SessionManager {
     return prefs.getBool(isLoggedInKey) ?? false;
   }
 }
+
 
 class MahasiswaLoginPage extends StatefulWidget {
   @override
@@ -507,14 +509,12 @@ class DosenNewModel {
   });
 }
 
-
 class MahasiswaPage extends StatefulWidget {
   @override
   _MahasiswaPageState createState() => _MahasiswaPageState();
 }
 
 class _MahasiswaPageState extends State<MahasiswaPage> {
-  late DosenProvider dosenProvider;
   late String formattedDate;
   late String formattedTime;
   bool isLoggedIn = false;
@@ -620,6 +620,9 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
       listDosenNewModel[index].status = value;
       listDosenNewModel[index].waktuHadir = waktuHadir; // Update waktuHadir in the DosenNewModel
     });
+
+    // Call updateStatus from the same provider instance used in HomePage
+    context.read<DosenProvider>().updateStatus(index, value);
   }
 
   Future<bool> confirmDialog(BuildContext context, int index) async {
@@ -664,8 +667,6 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
 
   @override
   Widget build(BuildContext context) {
-    dosenProvider = Provider.of<DosenProvider>(context);
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('List Pimpinan'),
