@@ -7,16 +7,20 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 void main() {
-  runApp(const MyApp());
+  final DosenProvider dosenProvider = DosenProvider(); // Create a single instance of DosenProvider
+
+  runApp(MyApp(dosenProvider: dosenProvider));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  final DosenProvider dosenProvider;
+
+  MyApp({required this.dosenProvider});
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider<DosenProvider>(
-      create: (_) => DosenProvider(),
+      create: (_) => dosenProvider, // Use the regular constructor to provide the existing instance
       child: MaterialApp(
         title: 'Absensi App',
         theme: ThemeData(
@@ -33,6 +37,7 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+
 
 class HomePage extends StatefulWidget {
   @override
@@ -199,77 +204,75 @@ class _HomePageState extends State<HomePage> {
                   itemCount: filteredList.length,
                   itemBuilder: (context, index) {
                     final dosen = filteredList[index];
-                    return Container(
-                      decoration: BoxDecoration(
-                        color: dosen.status
-                            ? Colors.green.withOpacity(0.2)
-                            : Colors.grey.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      margin: const EdgeInsets.symmetric(
-                          vertical: 4, horizontal: 16),
-                      padding: const EdgeInsets.all(8),
-                      child: ListTile(
-                        leading: ClipOval(
-                          child: Container(
-                            width: 60,
-                            height: 60,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              image: DecorationImage(
-                                image: AssetImage(dosen.imageUrl),
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
-                        ),
-                        title: Text(
-                          dosen.jabatan,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                          ),
-                        ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SizedBox(height: 8),
-                            Text(
-                              dosen.nama,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                CircleAvatar(
-                                  radius: 8,
-                                  backgroundColor:
-                                  dosen.status ? Colors.green : Colors.grey,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  dosen.status ? 'Hadir' : 'Tidak Hadir',
-                                  style: TextStyle(
-                                    color: dosen.status
-                                        ? Colors.green
-                                        : Colors.grey,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
+                    return buildDosenCard(dosen, index);
                   },
                 );
               },
             ),
             const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget buildDosenCard(DosenModel dosen, int index) {
+    return Container(
+      decoration: BoxDecoration(
+        color: dosen.status ? Colors.green.withOpacity(0.2) : Colors.grey.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
+      padding: const EdgeInsets.all(8),
+      child: ListTile(
+        leading: ClipOval(
+          child: Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              image: DecorationImage(
+                image: AssetImage(dosen.imageUrl),
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+        ),
+        title: Text(
+          dosen.jabatan,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 8),
+            Text(
+              dosen.nama,
+              style: const TextStyle(
+                fontSize: 16,
+                color: Colors.grey,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 8,
+                  backgroundColor: dosen.status ? Colors.green : Colors.grey,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  dosen.status ? 'Hadir' : 'Tidak Hadir',
+                  style: TextStyle(
+                    color: dosen.status ? Colors.green : Colors.grey,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
