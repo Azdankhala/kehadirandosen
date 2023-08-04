@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'dart:ui';
+
 
 void main() {
   runApp(
@@ -54,13 +56,6 @@ class _HomePageState extends State<HomePage> {
     checkLoginStatus();
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // Set the _isOnHomePage variable based on the current route's name
-  }
-
-
   void checkLoginStatus() async {
     bool loggedIn = await SessionManager.isLoggedIn();
     setState(() {
@@ -102,23 +97,55 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: Colors.green,
         textColor: Colors.white,
       );
-      Navigator.pushReplacementNamed(context, '/');
-    }
-  }
 
-  void _logout() async {
-    await SessionManager.setLoggedIn(false);
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => MahasiswaLoginPage()),
-    );
+      // Instead of using pushReplacementNamed, use pushAndRemoveUntil
+      // to navigate to the LoginPage and remove all previous routes from the stack
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => MahasiswaLoginPage()),
+            (Route<dynamic> route) => false,
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Universitas Nasional'),
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(50),
+        child: AppBar(
+          flexibleSpace: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.green.shade400, Colors.green.shade800],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+          ),
+          title: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(height: 8),
+                Text(
+                  'Universitas Nasional',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            if (isLoggedIn)
+              IconButton(
+                icon: Icon(Icons.logout),
+                onPressed: logout,
+              ),
+          ],
+        ),
       ),
       drawer: Drawer(
         child: ListView(
@@ -146,12 +173,6 @@ class _HomePageState extends State<HomePage> {
               ),
             if (isLoggedIn)
               ListTile(
-                leading: Icon(Icons.logout),
-                title: Text('Sign Out'),
-                onTap: _logout,
-              ),
-            if (isLoggedIn)
-              ListTile(
                 leading: Icon(Icons.list),
                 title: Text('List Pimpinan'),
                 onTap: () {
@@ -161,28 +182,30 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const SizedBox(height: 20),
-            Center(
-              child: Image.asset(
-                'images/unas.png',
-                height: 140,
-                width: 140,
-              ),
-            ),
-            const SizedBox(height: 10),
-            const Center(
-              child: Text(
-                'Daftar Kehadiran Pimpinan',
-                style: TextStyle(
-                  fontSize: 23,
-                  fontWeight: FontWeight.bold,
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: 20),
+              Center(
+                child: Image.asset(
+                  'images/unas.png',
+                  height: 140,
+                  width: 140,
                 ),
               ),
-            ),
+              const SizedBox(height: 10),
+              const Center(
+                child: Text(
+                  'Daftar Kehadiran Pimpinan',
+                  style: TextStyle(
+                    fontSize: 23,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: TextField(
@@ -205,6 +228,12 @@ class _HomePageState extends State<HomePage> {
               builder: (context, provider, _) {
                 final filteredList = provider.filterDosenList();
 
+                if (filteredList.isEmpty) {
+                  return Center(
+                    child: Text('No data found.'),
+                  );
+                }
+
                 return ListView.builder(
                   physics: NeverScrollableScrollPhysics(),
                   shrinkWrap: true,
@@ -217,7 +246,8 @@ class _HomePageState extends State<HomePage> {
               },
             ),
             const SizedBox(height: 16),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -286,6 +316,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
+
 
 class DosenModel {
   String jabatan;
@@ -436,6 +467,15 @@ class _MahasiswaLoginPageState extends State<MahasiswaLoginPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Login'),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.green.shade400, Colors.green.shade800],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
       ),
       body: ListView(
         children: [
@@ -738,6 +778,15 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Absensi Kehadiran'),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.green.shade400, Colors.green.shade800],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
       ),
       drawer: Drawer(
         child: ListView(

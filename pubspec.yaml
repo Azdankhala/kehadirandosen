@@ -43,6 +43,7 @@ dependencies:
   table_calendar: ^3.0.9
   cached_network_image: ^3.0.0
   jwt_decoder: ^2.0.1
+  flare_flutter: ^3.0.2
 
 dev_dependencies:
   flutter_test:
