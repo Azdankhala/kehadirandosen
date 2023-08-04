@@ -7,33 +7,34 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 void main() {
-  final DosenProvider dosenProvider = DosenProvider(); // Create a single instance of DosenProvider
-
-  runApp(MyApp(dosenProvider: dosenProvider));
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider<DosenProvider>(
+          create: (_) => DosenProvider(),
+        ),
+      ],
+      child: MyApp(),
+    ),
+  );
 }
 
+
 class MyApp extends StatelessWidget {
-  final DosenProvider dosenProvider;
-
-  MyApp({required this.dosenProvider});
-
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider<DosenProvider>(
-      create: (_) => dosenProvider, // Use the regular constructor to provide the existing instance
-      child: MaterialApp(
-        title: 'Absensi App',
-        theme: ThemeData(
-          primarySwatch: Colors.green,
-          visualDensity: VisualDensity.adaptivePlatformDensity,
-        ),
-        initialRoute: '/',
-        routes: {
-          '/': (context) => HomePage(),
-          '/mahasiswa': (context) => MahasiswaLoginPage(),
-          '/mahasiswa_page': (context) => MahasiswaPage(),
-        },
+    return MaterialApp(
+      title: 'Absensi App',
+      theme: ThemeData(
+        primarySwatch: Colors.green,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
+      initialRoute: '/mahasiswa', // Set the login page as the initial route
+      routes: {
+        '/mahasiswa': (context) => MahasiswaLoginPage(),
+        '/home': (context) => HomePage(),
+        '/mahasiswa_page': (context) => MahasiswaPage(),
+      },
     );
   }
 }
@@ -52,6 +53,13 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     checkLoginStatus();
   }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Set the _isOnHomePage variable based on the current route's name
+  }
+
 
   void checkLoginStatus() async {
     bool loggedIn = await SessionManager.isLoggedIn();
@@ -98,6 +106,14 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  void _logout() async {
+    await SessionManager.setLoggedIn(false);
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => MahasiswaLoginPage()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -132,16 +148,7 @@ class _HomePageState extends State<HomePage> {
               ListTile(
                 leading: Icon(Icons.logout),
                 title: Text('Sign Out'),
-                onTap: logout,
-              ),
-            // Hide the "Home" button when on the HomePage
-            if (ModalRoute.of(context)?.settings.name != '/')
-              ListTile(
-                leading: Icon(Icons.home),
-                title: Text('Home'),
-                onTap: () {
-                  Navigator.pushReplacementNamed(context, '/');
-                },
+                onTap: _logout,
               ),
             if (isLoggedIn)
               ListTile(
@@ -414,7 +421,7 @@ class _MahasiswaLoginPageState extends State<MahasiswaLoginPage> {
       await SessionManager.setLoggedIn(true);
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => MahasiswaPage()),
+        MaterialPageRoute(builder: (context) => HomePage()),
       );
     } else {
       setState(() {
@@ -423,6 +430,7 @@ class _MahasiswaLoginPageState extends State<MahasiswaLoginPage> {
       });
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -562,7 +570,7 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
     await SessionManager.setLoggedIn(false);
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (context) => HomePage()),
+      MaterialPageRoute(builder: (context) => MahasiswaLoginPage()),
           (Route<dynamic> route) => false,
     );
   }
@@ -672,7 +680,7 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('List Pimpinan'),
+        title: const Text('Absensi Kehadiran'),
       ),
       drawer: Drawer(
         child: ListView(
