@@ -431,76 +431,133 @@ class _MahasiswaLoginPageState extends State<MahasiswaLoginPage> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Login'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            TextFormField(
-              enableSuggestions: false,
-              autocorrect: false,
-              controller: _usernameController,
-              decoration: InputDecoration(
-                labelText: 'Username',
-                hintText: 'Enter your username',
-                prefixIcon: Icon(Icons.person),
-              ),
-            ),
-            SizedBox(height: 16),
-            TextFormField(
-              enableSuggestions: false,
-              autocorrect: false,
-              controller: _passwordController,
-              decoration: InputDecoration(
-                labelText: 'Password',
-                hintText: 'Enter your password',
-                prefixIcon: Icon(Icons.lock),
-              ),
-              obscureText: true,
-            ),
-            if (_loginError)
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Text(
-                  'Username or password is incorrect',
-                  style: TextStyle(
-                    color: Colors.red,
+      body: ListView(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                SizedBox(height: 32), // Add some spacing
+                Align(
+                  alignment: Alignment.topCenter,
+                  child: Image.asset(
+                    'images/unas.png',
+                    height: 200, // Increase the height to your desired size
                   ),
                 ),
-              ),
-            SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: _isLoggingIn ? null : _login,
-              child: _isLoggingIn
-                  ? SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.white,
+                SizedBox(height: 16),
+                TextFormField(
+                  enableSuggestions: false,
+                  autocorrect: false,
+                  controller: _usernameController,
+                  decoration: InputDecoration(
+                    labelText: 'Username',
+                    hintText: 'Enter your username',
+                    prefixIcon: Icon(Icons.person),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
                 ),
-              )
-                  : Text('Login'),
-              style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                SizedBox(height: 16),
+                TextFormField(
+                  enableSuggestions: false,
+                  autocorrect: false,
+                  controller: _passwordController,
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    hintText: 'Enter your password',
+                    prefixIcon: Icon(Icons.lock),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  obscureText: true,
                 ),
-              ),
+                if (_loginError)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      'Username or password is incorrect',
+                      style: TextStyle(
+                        color: Colors.red,
+                      ),
+                    ),
+                  ),
+                SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: _isLoggingIn ? null : _login,
+                  child: _isLoggingIn
+                      ? SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                      : Text('Login'),
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 20), // Add some spacing
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        // Navigate to the Mahasiswa page
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => MahasiswaLoginPage()),
+                        );
+                      },
+                      child: Text('Mahasiswa'),
+                      style: ElevatedButton.styleFrom(
+                        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 20), // Add some spacing
+                    ElevatedButton(
+                      onPressed: () {
+                        // Navigate to the Dosen page
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => MahasiswaLoginPage()),
+                        );
+                      },
+                      child: Text('Dosen'),
+                      style: ElevatedButton.styleFrom(
+                        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
+
 
 class DosenNewModel {
   int id;
