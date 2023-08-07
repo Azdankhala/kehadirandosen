@@ -665,7 +665,7 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
   bool isLoggedIn = false;
   List<DosenNewModel> listDosenNewModel = [];
   late Timer timer;
-  late String? loggedInUsername; // Variable to store the logged-in username
+  late String? loggedInUsername;
 
   @override
   void initState() {
@@ -719,25 +719,29 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
 
     await connection.open();
 
-    final result = await connection.query('SELECT * FROM tbl_dosen');
+    final result = await connection.query('SELECT id, name, jabatan, status, imageurl FROM tbl_dosen');
 
     await connection.close();
 
     setState(() {
       listDosenNewModel = result
-          .map((row) =>
-          DosenNewModel(
-            id: row[0] as int,
-            nama: row[1] as String,
-            jabatan: row[2] as String,
-            status: row[3] as bool,
-            imageUrl: row[4] as String,
-          ))
+          .map((row) => DosenNewModel(
+        id: row[0] as int,
+        nama: row[1] as String,
+        jabatan: row[2] as String,
+        status: row[3] as bool,
+        imageUrl: row[4] as String,
+        waktuHadir: null, // Set waktuHadir to null for every Dosen
+      ))
           .toList();
     });
   }
 
-  void updateStatus(int index, bool value) async {
+  void _toggleStatus(int index) async {
+    bool newStatus = !listDosenNewModel[index].status;
+    String? waktuHadir =
+    newStatus ? DateFormat('HH:mm').format(DateTime.now()) : null;
+
     final connection = PostgreSQLConnection(
       '10.0.2.2',
       8080,
@@ -747,13 +751,10 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
 
     await connection.open();
 
-    // Set waktuHadir to current time if value is true, otherwise set it to null
-    String? waktuHadir = value ? DateFormat('HH:mm').format(DateTime.now()) : null;
-
     await connection.execute(
       'UPDATE tbl_dosen SET status = @status, "waktuHadir" = @waktuHadir WHERE id = @id',
       substitutionValues: {
-        'status': value,
+        'status': newStatus,
         'waktuHadir': waktuHadir,
         'id': listDosenNewModel[index].id,
       },
@@ -762,12 +763,9 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
     await connection.close();
 
     setState(() {
-      listDosenNewModel[index].status = value;
-      listDosenNewModel[index].waktuHadir = waktuHadir; // Update waktuHadir in the DosenNewModel
+      listDosenNewModel[index].status = newStatus;
+      listDosenNewModel[index].waktuHadir = waktuHadir;
     });
-
-    // Call updateStatus from the same provider instance used in HomePage
-    context.read<DosenProvider>().updateStatus(index, value);
   }
 
   Future<bool> confirmDialog(BuildContext context, int index) async {
@@ -832,10 +830,6 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
             DrawerHeader(
               decoration: BoxDecoration(
                 color: Colors.green,
-                image: DecorationImage(
-                  image: AssetImage('assets/images/background.jpg'),
-                  fit: BoxFit.cover,
-                ),
               ),
               child: Stack(
                 children: [
@@ -927,12 +921,14 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
               itemCount: listDosenNewModel.length,
               itemBuilder: (context, index) {
                 return Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                   elevation: 4,
                   margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: ListTile(
                     leading: CircleAvatar(
-                      backgroundImage:
-                      AssetImage(listDosenNewModel[index].imageUrl),
+                      backgroundImage: AssetImage(listDosenNewModel[index].imageUrl),
                     ),
                     title: Text(
                       listDosenNewModel[index].jabatan,
@@ -944,39 +940,40 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(listDosenNewModel[index].nama),
-                        if (listDosenNewModel[index].waktuHadir != null)
-                          Text(
-                            'Waktu Hadir: ${listDosenNewModel[index].waktuHadir}',
-                            style: TextStyle(
-                              fontStyle: FontStyle.italic,
+                        Row(
+                          children: [
+                            Text(
+                              'Status: ',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          )
-                        else
-                          Text(
-                            'Tidak Hadir',
-                            style: TextStyle(
-                              fontStyle: FontStyle.italic,
+                            Flexible(
+                              child: ElevatedButton.icon(
+                                onPressed: () => _toggleStatus(index),
+                                icon: Icon(
+                                  listDosenNewModel[index].status
+                                      ? Icons.check_circle
+                                      : Icons.cancel,
+                                  color: Colors.white,
+                                ),
+                                label: Text(
+                                  listDosenNewModel[index].status ? 'Hadir' : 'Tidak Hadir',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: listDosenNewModel[index].status
+                                      ? Colors.green
+                                      : Colors.red,
+                                ),
+                              ),
                             ),
-                          ),
+                          ],
+                        ),
                       ],
-                    ),
-                    trailing: ElevatedButton(
-                      onPressed: () async {
-                        bool shouldUpdate =
-                        await confirmDialog(context, index);
-                        if (shouldUpdate) {
-                          updateStatus(
-                              index, !listDosenNewModel[index].status);
-                        }
-                      },
-                      child: Text(
-                        listDosenNewModel[index].status ? 'Hadir' : 'Absen',
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: listDosenNewModel[index].status
-                            ? Colors.green
-                            : Colors.red,
-                      ),
                     ),
                   ),
                 );
@@ -988,7 +985,9 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
     );
   }
 
-  @override
+
+
+@override
   void dispose() {
     timer.cancel();
     super.dispose();
