@@ -750,6 +750,10 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
     bool newStatus = !listDosenNewModel[index].status;
     String? waktuHadir = newStatus ? DateFormat('HH:mm').format(DateTime.now()) : null;
 
+    if (newStatus && listDosenNewModel[index].status == false) {
+      waktuHadir = DateFormat('HH:mm').format(DateTime.now());
+    }
+
     final connection = PostgreSQLConnection(
       '10.0.2.2',
       8080,
@@ -778,6 +782,7 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
     // Update the status in DosenProvider
     Provider.of<DosenProvider>(context, listen: false).updateStatus(index, newStatus);
   }
+
 
 
   Future<bool> confirmDialog(BuildContext context, int index) async {
@@ -820,9 +825,10 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
         false;
   }
 
-  @override
+   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('Absensi Kehadiran'),
         flexibleSpace: Container(
@@ -878,56 +884,67 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
           ],
         ),
       ),
-      body: Column(
-        children: [
-          Card(
-            color: Colors.green,
-            elevation: 4,
-            margin: EdgeInsets.all(16),
-            child: Padding(
-              padding: EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Tanggal',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.white, Colors.green.shade100],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: Column(
+          children: [
+            Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              elevation: 4,
+              margin: EdgeInsets.all(16),
+              color: Colors.green,
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Tanggal',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    formattedDate,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
+                    SizedBox(height: 8),
+                    Text(
+                      formattedDate,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 16),
-                  Text(
-                    'Waktu',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                    SizedBox(height: 16),
+                    Text(
+                      'Waktu',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    formattedTime,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 48,
-                      fontWeight: FontWeight.bold,
+                    SizedBox(height: 8),
+                    Text(
+                      formattedTime,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 48,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
           Expanded(
             child: ListView.builder(
               itemCount: listDosenNewModel.length,
@@ -983,6 +1000,17 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
                                 ),
                               ),
                             ),
+                            if (listDosenNewModel[index].status) // Display waktuHadir only if status is "Hadir"
+                              Padding(
+                                padding: const EdgeInsets.only(top: 4.0),
+                                child: Text(
+                                  'Waktu Hadir: ${listDosenNewModel[index].waktuHadir}',
+                                  style: TextStyle(
+                                    color: Colors.black,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
                           ],
                         ),
                       ],
@@ -994,6 +1022,7 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
           ),
         ],
       ),
+      )
     );
   }
 
