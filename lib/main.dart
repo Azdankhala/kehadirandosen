@@ -54,6 +54,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   bool isLoggedIn = false;
+
   @override
   void initState() {
     super.initState();
@@ -292,7 +293,7 @@ class _HomePageState extends State<HomePage> {
           children: [
             const SizedBox(height: 8),
             Text(
-              dosen.nama,
+              dosen.name,
               style: const TextStyle(
                 fontSize: 16,
                 color: Colors.grey,
@@ -325,11 +326,11 @@ class _HomePageState extends State<HomePage> {
 
 class DosenModel {
   String jabatan;
-  String nama;
+  String name;
   bool status;
   String imageUrl;
 
-  DosenModel(this.jabatan, this.nama, this.status, this.imageUrl);
+  DosenModel(this.jabatan, this.name, this.status, this.imageUrl);
 }
 
 class DosenProvider extends ChangeNotifier {
@@ -387,8 +388,6 @@ class DosenProvider extends ChangeNotifier {
       }).toList();
     }
   }
-
-
 
   void updateStatus(int index, bool value) {
     _listDosen[index].status = value;
@@ -641,11 +640,9 @@ class _MahasiswaLoginPageState extends State<MahasiswaLoginPage>
   }
 }
 
-
-
 class DosenNewModel {
   int id;
-  String nama;
+  String name;
   String jabatan;
   bool status;
   String imageUrl;
@@ -653,7 +650,7 @@ class DosenNewModel {
 
   DosenNewModel({
     required this.id,
-    required this.nama,
+    required this.name,
     required this.jabatan,
     required this.status,
     required this.imageUrl,
@@ -736,7 +733,7 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
       listDosenNewModel = result
           .map((row) => DosenNewModel(
         id: row[0] as int,
-        nama: row[1] as String,
+        name: row[1] as String,
         jabatan: row[2] as String,
         status: row[3] as bool,
         imageUrl: row[4] as String,
@@ -786,8 +783,6 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
   }
 
 
-
-
   Future<bool> confirmDialog(BuildContext context, int index) async {
     return (await showDialog<bool?>(
       context: context,
@@ -801,7 +796,7 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
               style: DefaultTextStyle.of(context).style,
               children: <TextSpan>[
                 TextSpan(
-                  text: listDosenNewModel[index].nama,
+                  text: listDosenNewModel[index].name,
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 TextSpan(text: '?'),
@@ -971,7 +966,7 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(listDosenNewModel[index].nama),
+                        Text(listDosenNewModel[index].name),
                         Row(
                           children: [
                             Text(
