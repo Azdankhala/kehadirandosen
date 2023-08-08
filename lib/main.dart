@@ -776,12 +776,15 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
 
     setState(() {
       listDosenNewModel[index].status = newStatus;
-      listDosenNewModel[index].waktuHadir = waktuHadir;
+      if (newStatus) {
+        listDosenNewModel[index].waktuHadir = waktuHadir;
+      }
     });
 
     // Update the status in DosenProvider
     Provider.of<DosenProvider>(context, listen: false).updateStatus(index, newStatus);
   }
+
 
 
 
