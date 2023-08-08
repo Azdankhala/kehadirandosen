@@ -9,12 +9,12 @@ import 'dart:ui';
 
 
 void main() {
+  final dosenProvider = DosenProvider(); // Create the instance here
+
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider<DosenProvider>(
-          create: (_) => DosenProvider(),
-        ),
+        ChangeNotifierProvider.value(value: dosenProvider), // Provide the instance
       ],
       child: MyApp(),
     ),
@@ -25,18 +25,23 @@ void main() {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Absensi App',
-      theme: ThemeData(
-        primarySwatch: Colors.green,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
+    final dosenProvider = DosenProvider(); // Create the instance here
+
+    return ChangeNotifierProvider<DosenProvider>(
+      create: (_) => dosenProvider, // Pass the instance to the provider
+      child: MaterialApp(
+        title: 'Absensi App',
+        theme: ThemeData(
+          primarySwatch: Colors.green,
+          visualDensity: VisualDensity.adaptivePlatformDensity,
+        ),
+        initialRoute: '/mahasiswa', // Set the login page as the initial route
+        routes: {
+          '/mahasiswa': (context) => MahasiswaLoginPage(),
+          '/home': (context) => HomePage(),
+          '/mahasiswa_page': (context) => MahasiswaPage(),
+        },
       ),
-      initialRoute: '/mahasiswa', // Set the login page as the initial route
-      routes: {
-        '/mahasiswa': (context) => MahasiswaLoginPage(),
-        '/home': (context) => HomePage(),
-        '/mahasiswa_page': (context) => MahasiswaPage(),
-      },
     );
   }
 }
@@ -49,7 +54,6 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   bool isLoggedIn = false;
-
   @override
   void initState() {
     super.initState();
@@ -254,6 +258,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget buildDosenCard(DosenModel dosen, int index) {
+    final dosenProvider = Provider.of<DosenProvider>(context);
     return Container(
       decoration: BoxDecoration(
         color: dosen.status ? Colors.green.withOpacity(0.2) : Colors.grey.withOpacity(0.2),
@@ -298,13 +303,13 @@ class _HomePageState extends State<HomePage> {
               children: [
                 CircleAvatar(
                   radius: 8,
-                  backgroundColor: dosen.status ? Colors.green : Colors.grey,
+                  backgroundColor: dosenProvider.listDosen[index].status ? Colors.green : Colors.grey,
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  dosen.status ? 'Hadir' : 'Tidak Hadir',
+                  dosenProvider.listDosen[index].status ? 'Hadir' : 'Tidak Hadir',
                   style: TextStyle(
-                    color: dosen.status ? Colors.green : Colors.grey,
+                    color: dosenProvider.listDosen[index].status ? Colors.green : Colors.grey,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -382,6 +387,8 @@ class DosenProvider extends ChangeNotifier {
       }).toList();
     }
   }
+
+
 
   void updateStatus(int index, bool value) {
     _listDosen[index].status = value;
@@ -642,7 +649,7 @@ class DosenNewModel {
   String jabatan;
   bool status;
   String imageUrl;
-  String? waktuHadir; // Change the data type to String?
+  String? waktuHadir;
 
   DosenNewModel({
     required this.id,
@@ -650,14 +657,16 @@ class DosenNewModel {
     required this.jabatan,
     required this.status,
     required this.imageUrl,
-    this.waktuHadir, // No need to initialize it with an empty string
+    this.waktuHadir,
   });
 }
+
 
 class MahasiswaPage extends StatefulWidget {
   @override
   _MahasiswaPageState createState() => _MahasiswaPageState();
 }
+
 
 class _MahasiswaPageState extends State<MahasiswaPage> {
   late String formattedDate;
@@ -739,8 +748,7 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
 
   void _toggleStatus(int index) async {
     bool newStatus = !listDosenNewModel[index].status;
-    String? waktuHadir =
-    newStatus ? DateFormat('HH:mm').format(DateTime.now()) : null;
+    String? waktuHadir = newStatus ? DateFormat('HH:mm').format(DateTime.now()) : null;
 
     final connection = PostgreSQLConnection(
       '10.0.2.2',
@@ -766,7 +774,11 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
       listDosenNewModel[index].status = newStatus;
       listDosenNewModel[index].waktuHadir = waktuHadir;
     });
+
+    // Update the status in DosenProvider
+    Provider.of<DosenProvider>(context, listen: false).updateStatus(index, newStatus);
   }
+
 
   Future<bool> confirmDialog(BuildContext context, int index) async {
     return (await showDialog<bool?>(
