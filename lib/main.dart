@@ -1026,8 +1026,6 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
     );
   }
 
-
-
 @override
   void dispose() {
     timer.cancel();
