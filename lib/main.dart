@@ -5,12 +5,10 @@ import 'package:provider/provider.dart';
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'dart:ui';
 
 
 void main() {
   final dosenProvider = DosenProvider(); // Create the instance here
-
   runApp(
     MultiProvider(
       providers: [
@@ -32,8 +30,21 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Absensi App',
         theme: ThemeData(
-          primarySwatch: Colors.green,
+          primaryColor: Colors.green.shade700,
           visualDensity: VisualDensity.adaptivePlatformDensity,
+          cardTheme: CardTheme(
+            elevation: 5,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
+          ),
+          buttonTheme: ButtonThemeData(
+            buttonColor: Colors.green.shade700,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            textTheme: ButtonTextTheme.primary,
+          ),
         ),
         initialRoute: '/mahasiswa', // Set the login page as the initial route
         routes: {
@@ -62,11 +73,25 @@ class _HomePageState extends State<HomePage> {
   }
 
   void checkLoginStatus() async {
-    bool loggedIn = await SessionManager.isLoggedIn();
-    setState(() {
-      isLoggedIn = loggedIn;
-    });
+    try {
+      bool loggedIn = await SessionManager.isLoggedIn();
+      setState(() {
+        isLoggedIn = loggedIn;
+      });
+
+      if (!isLoggedIn) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => MahasiswaLoginPage()),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error checking login status: $e')),
+      );
+    }
   }
+
 
   void logout() async {
     bool confirmLogout = await showDialog(
@@ -103,8 +128,6 @@ class _HomePageState extends State<HomePage> {
         textColor: Colors.white,
       );
 
-      // Instead of using pushReplacementNamed, use pushAndRemoveUntil
-      // to navigate to the LoginPage and remove all previous routes from the stack
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => MahasiswaLoginPage()),
@@ -211,46 +234,46 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
               ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: TextField(
-                decoration: InputDecoration(
-                  labelText: 'Cari Nama',
-                  prefixIcon: Icon(Icons.search),
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10.0),
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: TextField(
+                  decoration: InputDecoration(
+                    labelText: 'Cari Nama',
+                    prefixIcon: Icon(Icons.search),
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
                   ),
+                  onChanged: (value) {
+                    Provider.of<DosenProvider>(context, listen: false)
+                        .updateSearchQuery(value);
+                  },
                 ),
-                onChanged: (value) {
-                  Provider.of<DosenProvider>(context, listen: false)
-                      .updateSearchQuery(value);
+              ),
+              Consumer<DosenProvider>(
+                builder: (context, provider, _) {
+                  final filteredList = provider.filterDosenList();
+
+                  if (filteredList.isEmpty) {
+                    return Center(
+                      child: Text('No data found.'),
+                    );
+                  }
+
+                  return ListView.builder(
+                    physics: NeverScrollableScrollPhysics(),
+                    shrinkWrap: true,
+                    itemCount: filteredList.length,
+                    itemBuilder: (context, index) {
+                      final dosen = filteredList[index];
+                      return buildDosenCard(dosen, index);
+                    },
+                  );
                 },
               ),
-            ),
-            Consumer<DosenProvider>(
-              builder: (context, provider, _) {
-                final filteredList = provider.filterDosenList();
-
-                if (filteredList.isEmpty) {
-                  return Center(
-                    child: Text('No data found.'),
-                  );
-                }
-
-                return ListView.builder(
-                  physics: NeverScrollableScrollPhysics(),
-                  shrinkWrap: true,
-                  itemCount: filteredList.length,
-                  itemBuilder: (context, index) {
-                    final dosen = filteredList[index];
-                    return buildDosenCard(dosen, index);
-                  },
-                );
-              },
-            ),
-            const SizedBox(height: 16),
+              const SizedBox(height: 16),
             ],
           ),
         ),
@@ -322,7 +345,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
-
 
 class DosenModel {
   String jabatan;
@@ -510,12 +532,12 @@ class _MahasiswaLoginPageState extends State<MahasiswaLoginPage>
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 children: [
-                  SizedBox(height: 32), // Add some spacing
+                  SizedBox(height: 32),
                   Align(
                     alignment: Alignment.topCenter,
                     child: Image.asset(
                       'images/unas.png',
-                      height: 200, // Increase the height to your desired size
+                      height: 200,
                     ),
                   ),
                   SizedBox(height: 16),
@@ -579,13 +601,12 @@ class _MahasiswaLoginPageState extends State<MahasiswaLoginPage>
                       backgroundColor: Colors.green,
                     ),
                   ),
-                  SizedBox(height: 20), // Add some spacing
+                  SizedBox(height: 20),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       ElevatedButton(
                         onPressed: () {
-                          // Navigate to the Mahasiswa page
                           Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -723,121 +744,145 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
       username: 'postgres',
     );
 
-    await connection.open();
+    try {
+      await connection.open();
 
-    final result = await connection.query('SELECT id, name, jabatan, status, imageurl FROM tbl_dosen');
+      final result = await connection.query('SELECT id, name, jabatan, status, imageurl FROM tbl_dosen');
 
-    await connection.close();
-
-    setState(() {
-      listDosenNewModel = result
-          .map((row) => DosenNewModel(
-        id: row[0] as int,
-        name: row[1] as String,
-        jabatan: row[2] as String,
-        status: row[3] as bool,
-        imageUrl: row[4] as String,
-        waktuHadir: null, // Set waktuHadir to null for every Dosen
-      ))
-          .toList();
-    });
+      setState(() {
+        listDosenNewModel = result.map((row) => DosenNewModel(
+          id: row[0] as int,
+          name: row[1] as String,
+          jabatan: row[2] as String,
+          status: row[3] as bool,
+          imageUrl: row[4] as String,
+          waktuHadir: null, // Set waktuHadir to null for every Dosen
+        )).toList();
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching data: $e')),
+      );
+    } finally {
+      await connection.close();
+    }
   }
 
   void _toggleStatus(int index) async {
-    bool newStatus = !listDosenNewModel[index].status;
-    String? waktuHadir = newStatus ? DateFormat('HH:mm').format(DateTime.now()) : null;
+    bool? confirmed = await confirmDialog(context, index);
+    if (confirmed != null && confirmed) {
+      bool newStatus = !listDosenNewModel[index].status;
+      String? waktuHadir = newStatus ? DateFormat('HH:mm').format(DateTime.now()) : null;
 
-    if (newStatus && listDosenNewModel[index].status == false) {
-      waktuHadir = DateFormat('HH:mm').format(DateTime.now());
-    }
+      final connection = PostgreSQLConnection(
+        '10.0.2.2',
+        8080,
+        'unas',
+        username: 'postgres',
+      );
 
-    final connection = PostgreSQLConnection(
-      '10.0.2.2',
-      8080,
-      'unas',
-      username: 'postgres',
-    );
-
-    await connection.open();
-
-    await connection.execute(
-      'UPDATE tbl_dosen SET status = @status, "waktuHadir" = @waktuHadir WHERE id = @id',
-      substitutionValues: {
-        'status': newStatus,
-        'waktuHadir': waktuHadir,
-        'id': listDosenNewModel[index].id,
-      },
-    );
-
-    await connection.close();
-
-    setState(() {
-      listDosenNewModel[index].status = newStatus;
-      if (newStatus) {
-        listDosenNewModel[index].waktuHadir = waktuHadir;
+      try {
+        await connection.open();
+        await connection.execute(
+          'UPDATE tbl_dosen SET status = @status, "waktuHadir" = @waktuHadir WHERE id = @id',
+          substitutionValues: {
+            'status': newStatus,
+            'waktuHadir': waktuHadir,
+            'id': listDosenNewModel[index].id,
+          },
+        );
+      } catch (error) {
+        print('Error when updating database: $error');
+      } finally {
+        await connection.close();
       }
-    });
 
-    // Update the status in DosenProvider
-    Provider.of<DosenProvider>(context, listen: false).updateStatus(index, newStatus);
+      setState(() {
+        listDosenNewModel[index].status = newStatus;
+        if (newStatus) {
+          listDosenNewModel[index].waktuHadir = waktuHadir;
+        }
+      });
+
+      Provider.of<DosenProvider>(context, listen: false).updateStatus(index, newStatus);
+    }
   }
-
 
   Future<bool> confirmDialog(BuildContext context, int index) async {
     return (await showDialog<bool?>(
       context: context,
-      barrierDismissible: false,
+      barrierDismissible: false,  // Prevents user from canceling dialog by clicking outside of it
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Confirmation'),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),  // Rounded corners
+          ),
+          title: Row(
+            children: [
+              Icon(Icons.warning, color: Colors.orange),  // Adds a warning icon before the title
+              SizedBox(width: 10),
+              Text('Confirmation'),
+            ],
+          ),
           content: RichText(
             text: TextSpan(
-              text: 'Are you sure you want to update the status for ',
-              style: DefaultTextStyle.of(context).style,
+              text: 'Do you want to update the status for ',
+              style: TextStyle(color: Colors.black, fontSize: 16),
               children: <TextSpan>[
                 TextSpan(
                   text: listDosenNewModel[index].name,
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blueGrey,
+                  ),
                 ),
                 TextSpan(text: '?'),
               ],
             ),
           ),
+          actionsPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          buttonPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           actions: <Widget>[
-            TextButton(
-              child: Text('Yes'),
-              onPressed: () {
-                Navigator.of(context).pop(true);
-              },
-            ),
-            TextButton(
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,  // Changes the color of the "No" button to red
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
               child: Text('No'),
               onPressed: () {
                 Navigator.of(context).pop(false);
               },
             ),
+            SizedBox(width: 8),  // Adds some space between the "No" and "Yes" buttons
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,  // Changes the color of the "Yes" button to green
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: Text('Yes'),
+              onPressed: () {
+                Navigator.of(context).pop(true);
+              },
+            ),
           ],
         );
       },
-    )) ??
-        false;
+    )) ?? false;
   }
 
-   @override
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.green[100],
       appBar: AppBar(
         title: const Text('Absensi Kehadiran'),
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.green.shade400, Colors.green.shade800],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-        ),
+        backgroundColor: Colors.green.shade700,
+        elevation: 5, // Added a bit of shadow
       ),
       drawer: Drawer(
         child: ListView(
@@ -845,28 +890,33 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
           children: [
             DrawerHeader(
               decoration: BoxDecoration(
-                color: Colors.green,
+                gradient: LinearGradient(
+                  colors: [Colors.green.shade700, Colors.greenAccent],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
               ),
-              child: Stack(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Positioned(
-                    bottom: 12,
-                    left: 12,
-                    child: Text(
-                      'Menu',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                      ),
+                  Icon(Icons.person, size: 64, color: Colors.white),
+                  SizedBox(height: 10),
+                  Text(
+                    'Username', // Replace with dynamic username if available
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],
               ),
             ),
+            Divider(),
             if (isLoggedIn)
               ListTile(
-                leading: Icon(Icons.home),
-                title: Text('Home'),
+                leading: Icon(Icons.home, color: Colors.green),
+                title: Text('Home', style: TextStyle(color: Colors.green)),
                 onTap: () {
                   Navigator.pushReplacement(
                     context,
@@ -875,8 +925,8 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
                 },
               ),
             ListTile(
-              leading: Icon(Icons.logout),
-              title: Text('Sign Out'),
+              leading: Icon(Icons.logout, color: Colors.red),
+              title: Text('Sign Out', style: TextStyle(color: Colors.red)),
               onTap: logout,
             ),
           ],
@@ -885,7 +935,7 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.white, Colors.green.shade100],
+            colors: [Colors.white, Colors.green[100]!],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -894,11 +944,11 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
           children: [
             Card(
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
               ),
-              elevation: 4,
               margin: EdgeInsets.all(16),
-              color: Colors.green,
+              elevation: 4,
+              color: Colors.green,  // Changed the color here from purple
               child: Padding(
                 padding: EdgeInsets.all(16),
                 child: Column(
@@ -907,9 +957,8 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
                     Text(
                       'Tanggal',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: Colors.white70,
                         fontSize: 16,
-                        fontWeight: FontWeight.bold,
                       ),
                     ),
                     SizedBox(height: 8),
@@ -925,9 +974,8 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
                     Text(
                       'Waktu',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: Colors.white70,
                         fontSize: 16,
-                        fontWeight: FontWeight.bold,
                       ),
                     ),
                     SizedBox(height: 8),
@@ -943,88 +991,83 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
                 ),
               ),
             ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: listDosenNewModel.length,
-              itemBuilder: (context, index) {
-                return Card(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  elevation: 4,
-                  margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundImage: AssetImage(listDosenNewModel[index].imageUrl),
+            Expanded(
+              child: ListView.builder(
+                itemCount: listDosenNewModel.length,
+                itemBuilder: (context, index) {
+                  return Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    title: Text(
-                      listDosenNewModel[index].jabatan,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
+                    elevation: 4,
+                    margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        backgroundImage: AssetImage(listDosenNewModel[index].imageUrl),
+                        radius: 28,
                       ),
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(listDosenNewModel[index].name),
-                        Row(
-                          children: [
-                            Text(
-                              'Status: ',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
+                      title: Text(
+                        listDosenNewModel[index].jabatan,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,  // Slightly larger text
+                        ),
+                      ),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(listDosenNewModel[index].name),
+                          SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Icon(
+                                listDosenNewModel[index].status ? Icons.check : Icons.close,
+                                color: listDosenNewModel[index].status ? Colors.green : Colors.red,
                               ),
-                            ),
-                            Flexible(
-                              child: ElevatedButton.icon(
-                                onPressed: () => _toggleStatus(index),
-                                icon: Icon(
-                                  listDosenNewModel[index].status
-                                      ? Icons.check_circle
-                                      : Icons.cancel,
-                                  color: Colors.white,
-                                ),
-                                label: Text(
-                                  listDosenNewModel[index].status ? 'Hadir' : 'Tidak Hadir',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: listDosenNewModel[index].status
-                                      ? Colors.green
-                                      : Colors.red,
+                              SizedBox(width: 8),
+                              Text(
+                                listDosenNewModel[index].status ? 'Hadir' : 'Tidak Hadir',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
-                            ),
-                            if (listDosenNewModel[index].status) // Display waktuHadir only if status is "Hadir"
-                              Padding(
-                                padding: const EdgeInsets.only(top: 4.0),
-                                child: Text(
+                              if (listDosenNewModel[index].status) ...[
+                                SizedBox(width: 8),
+                                Text(
                                   'Waktu Hadir: ${listDosenNewModel[index].waktuHadir}',
                                   style: TextStyle(
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                    color: Colors.grey[700],
                                   ),
                                 ),
-                              ),
-                          ],
-                        ),
-                      ],
+                              ],
+                            ],
+                          ),
+                        ],
+                      ),
+                      trailing: IconButton(
+                        icon: Icon(Icons.edit, color: Colors.green),
+                        onPressed: () {
+                          confirmDialog(context, index).then((confirmed) {
+                            if (confirmed) {
+                              _toggleStatus(index);
+                            }
+                          });
+                        },
+                      ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-      )
     );
   }
 
-@override
+
+  @override
   void dispose() {
     timer.cancel();
     super.dispose();
