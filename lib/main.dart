@@ -9,8 +9,6 @@ import 'dart:core';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-
-
 // Main entry point of the application
 void main() {
   final dosenProvider = DosenProvider(); // Create the instance here
@@ -532,7 +530,8 @@ class _MahasiswaLoginPageState extends State<MahasiswaLoginPage>
             context,
             MaterialPageRoute(builder: (context) => const HomePage()),
           );
-        } else {
+        }
+        else {
           setState(() {
             _loginError = true;
             _isLoggingIn = false;
@@ -552,7 +551,6 @@ class _MahasiswaLoginPageState extends State<MahasiswaLoginPage>
       print('Error during login: $e');
     }
   }
-
 
   // Build the widget tree for this page
   @override
@@ -727,7 +725,6 @@ class DosenNewModel {
   });
 }
 
-
 class MahasiswaPage extends StatefulWidget {
   const MahasiswaPage({super.key});
 
@@ -739,6 +736,7 @@ class MahasiswaPage extends StatefulWidget {
 class _MahasiswaPageState extends State<MahasiswaPage> {
   late String formattedDate;
   late String formattedTime;
+  String? loggedInUser;
   bool isLoggedIn = false;
   List<DosenNewModel> listDosenNewModel = [];
   late Timer timer;
@@ -1144,10 +1142,10 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
     );
   }
 
-
   @override
   void dispose() {
     timer.cancel();
     super.dispose();
   }
 }
+
