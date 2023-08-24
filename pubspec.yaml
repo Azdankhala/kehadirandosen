@@ -46,6 +46,7 @@ dependencies:
   flare_flutter: ^3.0.2
   path_provider: ^2.1.0
   sqflite: ^2.3.0
+  http: ^1.1.0
 
 dev_dependencies:
   flutter_test:
@@ -87,6 +88,7 @@ flutter:
     - images/dekankesehatan.png
     - images/dekantekniksains.png
     - images/dekanti.png
+    - images/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
