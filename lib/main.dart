@@ -13,12 +13,9 @@ import 'dart:convert';
 void main() {
   final dosenProvider = DosenProvider(); // Create the instance here
   runApp(
-    MultiProvider(
-      providers: [
-        // Providing `DosenProvider` to descendant widgets
-        ChangeNotifierProvider.value(value: dosenProvider),
-      ],
-      child: const MyApp(),
+    ChangeNotifierProvider(
+      create: (context) => dosenProvider,
+      child: MyApp(),
     ),
   );
 }
@@ -954,68 +951,68 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.green[100],
-      appBar: AppBar(
-        title: const Text('Absensi Kehadiran'),
-        backgroundColor: Colors.green.shade700,
-        elevation: 5, // Added a bit of shadow
-      ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.green.shade700, Colors.greenAccent],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+        backgroundColor: Colors.green[100],
+        appBar: AppBar(
+          title: const Text('Absensi Kehadiran'),
+          backgroundColor: Colors.green.shade700,
+          elevation: 5,
+        ),
+        drawer: Drawer(
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              DrawerHeader(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.green.shade700, Colors.greenAccent],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child: const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.person, size: 64, color: Colors.white),
+                    SizedBox(height: 10),
+                    Text(
+                      'name',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              child: const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(Icons.person, size: 64, color: Colors.white),
-                  SizedBox(height: 10),
-                  Text(
-                    'Username', // Replace with dynamic username if available
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Divider(),
-            if (isLoggedIn)
+              const Divider(),
+              if (isLoggedIn)
+                ListTile(
+                  leading: const Icon(Icons.home, color: Colors.green),
+                  title: const Text('Home', style: TextStyle(color: Colors.green)),
+                  onTap: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => const HomePage()),
+                    );
+                  },
+                ),
               ListTile(
-                leading: const Icon(Icons.home, color: Colors.green),
-                title: const Text('Home', style: TextStyle(color: Colors.green)),
-                onTap: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => const HomePage()),
-                  );
-                },
+                leading: const Icon(Icons.logout, color: Colors.red),
+                title: const Text('Sign Out', style: TextStyle(color: Colors.red)),
+                onTap: logout,
               ),
-            ListTile(
-              leading: const Icon(Icons.logout, color: Colors.red),
-              title: const Text('Sign Out', style: TextStyle(color: Colors.red)),
-              onTap: logout,
-            ),
-          ],
-        ),
-      ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.white, Colors.green[100]!],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+            ],
           ),
         ),
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.white, Colors.green[100]!],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
         child: Column(
           children: [
             Card(
@@ -1086,14 +1083,14 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
                         listDosenNewModel[index].jabatan,
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
-                          fontSize: 18,  // Slightly larger text
+                          fontSize: 18,
                         ),
                       ),
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(listDosenNewModel[index].name),
-                          const SizedBox(height: 4),
+                          // Removed the SizedBox with the fixed height.
                           Row(
                             children: [
                               Icon(
@@ -1121,24 +1118,40 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
                           ),
                         ],
                       ),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.edit, color: Colors.green),
-                        onPressed: () {
-                          confirmDialog(context, index).then((confirmed) {
-                            if (confirmed) {
-                              _toggleStatus(index);
-                            }
-                          });
-                        },
-                      ),
-                    ),
-                  );
-                },
+          trailing: InkWell(
+            onTap: () {
+              confirmDialog(context, index).then((confirmed) {
+                if (confirmed) {
+                  setState(() {
+                    listDosenNewModel[index].status = !listDosenNewModel[index].status;
+                  });
+                  _toggleStatus(index);
+                }
+              });
+            },
+            child: Container(
+              width: 50,
+              height: 30,
+              decoration: BoxDecoration(
+                color: listDosenNewModel[index].status ? Colors.green : Colors.red,
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: Center(
+                child: Text(
+                  listDosenNewModel[index].status ? 'Hadir' : 'Tidak Hadir',
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
             ),
-          ],
+          ),
         ),
-      ),
+      );
+    },
+  ),
+),
+  ]
+    ),
+      )
     );
   }
 
