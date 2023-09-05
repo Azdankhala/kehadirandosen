@@ -368,13 +368,13 @@ class DosenModel {
     required this.imageUrl,
   });
 
-  // Konstruktor untuk mengubah data dari JSON ke objek DosenModel
   factory DosenModel.fromJson(Map<String, dynamic> json) {
+    final dosenData = json['dosen'];
     return DosenModel(
-      jabatan: json['jabatan'],
-      name: json['name'],
+      jabatan: dosenData['jabatan'],
+      name: dosenData['name'],
       status: json['status'] ?? false,
-      imageUrl: json['image_url'],
+      imageUrl: dosenData['image_url'],
     );
   }
 }
@@ -418,7 +418,7 @@ class DosenProvider extends ChangeNotifier {
   void getData() async {
     final token = await SessionManager.getToken();
     final response = await http.get(
-      Uri.parse('http://10.0.2.2:8000/api/dosen'),
+      Uri.parse('http://10.0.2.2:8000/api/absensi'),
       headers: {
         'Authorization': 'Bearer $token',
       },
@@ -429,7 +429,7 @@ class DosenProvider extends ChangeNotifier {
       _listDosen = responseData.map((data) => DosenModel.fromJson(data)).toList();
       notifyListeners();
     } else {
-      print('Error fetching data from /api/dosen');
+      print('Error fetching data from /api/absensi');
     }
   }
 }
